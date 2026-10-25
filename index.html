@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>고등부 탑승권</title>
+<title>전도축제 초대장</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Mono:wght@500;700&family=Noto+Sans+KR:wght@500;700;900&display=swap">
@@ -147,7 +147,7 @@ footer #fSite{font-family:var(--mono);font-size:13px;color:#5b6a82}
       </div>
     </form>
     <button class="make" id="makeBtn" type="button" disabled>
-      탑승권 만들기
+      초대장 만들기
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" transform="rotate(90 12 12)"/></svg>
     </button>
   </section>
@@ -155,7 +155,7 @@ footer #fSite{font-family:var(--mono);font-size:13px;color:#5b6a82}
   <!-- 2) 결과 화면 -->
   <section class="screen" id="resultScreen" hidden>
     <div class="result">
-      <div class="card-wrap"><img id="cardImg" alt="완성된 탑승권 초대장"></div>
+      <div class="card-wrap"><img id="cardImg" alt="완성된 전도축제 초대장"></div>
       <div class="acts">
         <button class="act" id="saveBtn" type="button"><span id="saveTxt">저장하기</span>
           <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 3v22M3 14h22"/></svg></button>
@@ -317,27 +317,33 @@ function drawPlaceholder(ctx, W, H, seed, qrIm) {
   ctx.restore();
   txt(ctx, 'BOARDING PASS', 60, 68, { size: 40, font: 'display', color: '#fff', ls: 2 });
   txt(ctx, `${E.church} 고등부`, STUB - 40, 64, { size: 24, w: 700, color: '#c9d4e8', align: 'right' });
-  txt(ctx, '탑승권', W - 170, 68, { size: 38, font: 'display', color: '#fff', align: 'center' });
+  txt(ctx, '전도축제 초대장', W - 170, 66, { size: 34, font: 'display', color: '#fff', align: 'center' });
 
   // 라벨
   txt(ctx, 'PASSENGER  초대받은 친구', 60, 196, { size: 20, font: 'mono', w: 700, color: GREY, ls: 1 });
   txt(ctx, 'INVITED BY  초대한 친구', 60, 410, { size: 20, font: 'mono', w: 700, color: GREY, ls: 1 });
 
-  // 루트
-  // 출발지·도착지: 각 150px 안에 맞게 자동 크기
-  const fitW = (t, font, w, max, maxW) => { let z = max; ctx.font = `${w} ${z}px ${font}`; while (ctx.measureText(t).width > maxW && z > 16) { z -= 1; ctx.font = `${w} ${z}px ${font}`; } return z; };
-  txt(ctx, E.route.from[0], 480, 266, { size: fitW(E.route.from[0], F_MONO, 700, 44, 135), font: 'mono', w: 700, color: NAVY });
-  txt(ctx, E.route.to[0], 838, 266, { size: fitW(E.route.to[0], F_DISPLAY, 400, 48, 135), font: 'display', color: NAVY, align: 'right' });
-  plane(ctx, 660, 254, 32, OR);
-  txt(ctx, E.route.from[1], 482, 300, { size: 18, w: 700, color: GREY });
-  txt(ctx, E.route.to[1], 838, 300, { size: 18, w: 700, color: GREY, align: 'right' });
-
-  // 정보 그리드
+  // ── 오른쪽 열 (x 480–838) : 왼쪽 열과 baseline 정렬 ──
+  const X0 = 480, X1 = 838;
+  const fitW = (t, font, w, max, maxW) => { let z = max; ctx.font = `${w} ${z}px ${font}`; while (ctx.measureText(t).width > maxW && z > 14) { z -= 1; ctx.font = `${w} ${z}px ${font}`; } return z; };
+  // 라벨 (PASSENGER 라벨과 같은 y=196)
+  txt(ctx, 'FROM', X0, 196, { size: 18, font: 'mono', w: 700, color: GREY, ls: 1.5 });
+  txt(ctx, 'TO', X1, 196, { size: 18, font: 'mono', w: 700, color: GREY, align: 'right', ls: 1.5 });
+  // 출발지·도착지: 같은 높이로 보이게 공통 크기
+  const rs = Math.min(fitW(E.route.from[0], F_MONO, 700, 40, 150), fitW(E.route.to[0], F_DISPLAY, 400, 40, 150));
+  txt(ctx, E.route.from[0], X0, 252, { size: rs, font: 'mono', w: 700, color: NAVY });
+  txt(ctx, E.route.to[0], X1, 252, { size: rs + 4, font: 'display', color: NAVY, align: 'right' });
+  plane(ctx, (X0 + X1) / 2, 252 - rs * 0.36, 30, OR);
+  txt(ctx, E.route.from[1], X0, 284, { size: 16, w: 700, color: GREY });
+  txt(ctx, E.route.to[1], X1, 284, { size: 16, w: 700, color: GREY, align: 'right' });
+  // 구분선
+  ctx.fillStyle = '#e3e8f0'; ctx.fillRect(X0, 314, X1 - X0, 2);
+  // 일정: 태그 | 일시(굵게) / 장소(회색) — 2번째 줄이 From 이름(y=470)과 정렬
   E.legs.forEach((l, i) => {
-    const y = 360 + i * 84;
-    txt(ctx, l.tag, 480, y, { size: 17, font: 'mono', w: 700, color: OR, ls: 1.5 });
-    txt(ctx, l.when, 480, y + 32, { size: 25, w: 900, color: NAVY });
-    txt(ctx, l.where, 480, y + 58, { size: 17, w: 700, color: GREY });
+    const y = 364 + i * 86;
+    txt(ctx, l.tag, X0, y, { size: 16, font: 'mono', w: 700, color: OR, ls: 1 });
+    txt(ctx, l.when, X0 + 76, y, { size: fitW(l.when, F_BODY, 900, 24, X1 - X0 - 76), w: 900, color: NAVY });
+    txt(ctx, l.where, X0 + 76, y + 30, { size: 16, w: 700, color: GREY });
   });
 
   // 하단 행사명
@@ -365,11 +371,6 @@ function drawPlaceholder(ctx, W, H, seed, qrIm) {
   txt(ctx, CONFIG.signup.cardDesc, sx, 538, { size: 15, w: 700, color: GREY, align: 'center' });
   txt(ctx, CONFIG.signup.cardDue, sx, 562, { size: 15, w: 700, color: OR, align: 'center' });
 
-  // WELCOME 스탬프
-  ctx.save(); ctx.translate(640, 150); ctx.rotate(-0.12); ctx.globalAlpha = .9;
-  ctx.strokeStyle = OR; ctx.lineWidth = 5; ctx.beginPath(); ctx.roundRect(-92, -34, 184, 68, 10); ctx.stroke();
-  txt(ctx, 'WELCOME', 0, 13, { size: 36, font: 'display', color: OR, align: 'center', ls: 2 });
-  ctx.restore();
 }
 
 async function make() {
@@ -380,7 +381,7 @@ async function make() {
     // 웹폰트는 글자 묶음(subset)별로 내려오므로, 캔버스에 그릴 실제 글자를 넘겨 미리 로드
     const allText = [to, from, E.church, E.title.join(' ').replace(/<[^>]+>/g, ''), E.band, E.stubDate, E.legs.map(l => l.tag + l.when + l.where).join(' '), '토 주일 DAYS', CONFIG.signup.title, CONFIG.signup.cardDesc, CONFIG.signup.cardDue,
       E.flight, E.route.from.join(' '), E.route.to.join(' '),
-      'BOARDING PASS 탑승권 고등부 PASSENGER 초대받은 친구 INVITED BY 초대한 FLIGHT DATE TIME GATE SEAT WELCOME No. 0123456789'].join(' ');
+      'FROM TO BOARDING PASS 전도축제 초대장 고등부 PASSENGER 초대받은 친구 INVITED BY 초대한 FLIGHT DATE TIME GATE SEAT WELCOME No. 0123456789'].join(' ');
     await Promise.all([
       document.fonts.load(`400 60px "Black Han Sans"`, allText), document.fonts.load(`900 30px "Noto Sans KR"`, allText),
       document.fonts.load(`700 30px "Noto Sans KR"`, allText), document.fonts.load(`500 30px "Noto Sans KR"`, allText),
@@ -471,7 +472,7 @@ $('extBtn').addEventListener('click', () => openExternal(extUrl()));
 let tT;
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(tT); tT = setTimeout(() => t.hidden = true, 2600); }
 
-// 주소에 이름이 있으면(외부 브라우저로 넘어온 경우) 바로 탑승권 생성
+// 주소에 이름이 있으면(외부 브라우저로 넘어온 경우) 바로 초대장 생성
 (() => {
   const q = new URLSearchParams(location.search);
   const t = (q.get('to') || '').trim(), f = (q.get('from') || '').trim();
