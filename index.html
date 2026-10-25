@@ -263,6 +263,7 @@ for (let i = 0; i < 13; i++) {
 /* ── 인앱브라우저 ── */
 const UA = navigator.userAgent;
 const IN_APP = /KAKAOTALK|Instagram|FBAN|FBAV|Line\/|NAVER|DaumApps|everytimeApp|band/i.test(UA);
+const IS_ANDROID = /Android/i.test(UA);
 if (CONFIG.noticeMode === 'inapp' && !IN_APP) $('notice').hidden = true;
 
 /* ── 입력 ── */
@@ -411,6 +412,12 @@ let dl = null;
 if (window.claude && window.claude.use) window.claude.use('downloads').then(ns => { dl = ns; }).catch(() => {});
 $('saveBtn').addEventListener('click', async () => {
   if (!cardBlob) return;
+  // 안드로이드 인앱브라우저(카톡 등)는 파일 저장을 막음 → 이름을 넘겨 외부 브라우저로 이동
+  if (IN_APP && IS_ANDROID && !dl) {
+    toast('외부 브라우저로 이동해요. 열리면 저장하기를 다시 눌러주세요.');
+    setTimeout(() => openExternal(extUrl()), 800);
+    return;
+  }
   const btn = $('saveBtn'); if (btn.getAttribute('aria-busy') === 'true') return;
   btn.setAttribute('aria-busy', 'true'); $('saveTxt').textContent = '저장 중...';
   const name = CONFIG.fileName(toName);
@@ -421,9 +428,11 @@ $('saveBtn').addEventListener('click', async () => {
       return;
     }
     const file = new File([cardBlob], name, { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
+    // 아이폰: 공유창(사진 저장) / 안드로이드: 바로 다운로드(갤러리에 표시)
+    if (!IS_ANDROID && navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
     else {
-      const a = document.createElement('a'); a.href = cardURL; a.download = name;
+      // 한글 파일명은 일부 안드로이드 크롬에서 'download'(확장자 없음)로 저장됨 → 영문 파일명 사용
+      const a = document.createElement('a'); a.href = cardURL; a.download = `LIVINGHOPE_ticket_${Date.now().toString(36)}.png`;
       document.body.appendChild(a); a.click(); a.remove();
       if (IN_APP) toast('저장이 안 되면 이미지를 길게 눌러 저장해 주세요.');
     }
@@ -439,16 +448,33 @@ $('retryBtn').addEventListener('click', () => {
 });
 
 /* ── 외부 브라우저 ── */
-$('extBtn').addEventListener('click', async () => {
-  const url = location.href;
+// 입력한 이름을 주소에 담아 외부 브라우저에서도 이어지게 함
+function extUrl() {
+  const u = new URL(location.origin + location.pathname);
+  if (toName && fromI.value.trim()) { u.searchParams.set('to', toName); u.searchParams.set('from', fromI.value.trim()); }
+  u.searchParams.set('v', Date.now().toString(36));
+  return u.toString();
+}
+async function openExternal(url) {
   if (/KAKAOTALK/i.test(UA)) { location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url); return; }
-  if (/Android/i.test(UA)) { location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end'; return; }
+  if (IS_ANDROID) {
+    location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
+    return;
+  }
   try { await navigator.clipboard.writeText(url); toast('주소를 복사했어요. Safari에 붙여넣어 열어주세요.'); }
   catch { toast('메뉴(···)에서 ‘다른 브라우저로 열기’를 선택해 주세요.'); }
-});
+}
+$('extBtn').addEventListener('click', () => openExternal(extUrl()));
 
 let tT;
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(tT); tT = setTimeout(() => t.hidden = true, 2600); }
+
+// 주소에 이름이 있으면(외부 브라우저로 넘어온 경우) 바로 탑승권 생성
+(() => {
+  const q = new URLSearchParams(location.search);
+  const t = (q.get('to') || '').trim(), f = (q.get('from') || '').trim();
+  if (t && f) { toI.value = t.slice(0, 8); fromI.value = f.slice(0, 8); sync(); make(); }
+})();
 </script>
 </body>
 </html>
