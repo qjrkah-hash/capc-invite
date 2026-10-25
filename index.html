@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>고등부 탑승권</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Mono:wght@500;700&family=Noto+Sans+KR:wght@500;700;900&display=swap">
+<style>
+/* Layout: 모바일 1열(최대 480px) · 상단 탑승권 히어로 → 입력/결과 → 탑승 진행 도트 → 푸터 */
+:root{
+  --navy:#10223f;
+  --paper:#ffffff;
+  --sky:#e8eef8;
+  --orange:#ff5a1f;
+  --orange-soft:#ffc2ab;
+  --muted:#b3bccb;
+  --display:"Black Han Sans","Noto Sans KR",sans-serif;
+  --font:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--navy);font-family:var(--font);-webkit-text-size-adjust:100%}
+body{padding-bottom:env(safe-area-inset-bottom,0px)}
+button,input{font-family:inherit}
+.page{max-width:480px;margin:0 auto;overflow:hidden}
+
+/* ── HERO (탑승권) ── */
+.hero{background:var(--sky);padding:34px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px));position:relative}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:14px;
+  background:radial-gradient(circle at 10px 14px,var(--paper) 7px,transparent 7.5px) 0 0/20px 14px repeat-x}
+.ticket{position:relative;display:grid;grid-template-columns:1fr 92px;background:var(--paper);border-radius:14px;
+  box-shadow:0 10px 28px rgba(16,34,63,.16);transform:rotate(-2.5deg);
+  -webkit-mask:radial-gradient(circle at calc(100% - 92px) 0,transparent 11px,#000 11.5px) top/100% 51% no-repeat,
+               radial-gradient(circle at calc(100% - 92px) 100%,transparent 11px,#000 11.5px) bottom/100% 51% no-repeat;
+          mask:radial-gradient(circle at calc(100% - 92px) 0,transparent 11px,#000 11.5px) top/100% 51% no-repeat,
+               radial-gradient(circle at calc(100% - 92px) 100%,transparent 11px,#000 11.5px) bottom/100% 51% no-repeat}
+.t-main{padding:16px 16px 18px;min-width:0}
+.t-top{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.12em}
+.t-top .bp{background:var(--navy);color:#fff;padding:3px 7px;border-radius:4px}
+.t-route{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+.t-route b{font-family:var(--mono);font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1}
+.t-route small{display:block;font-size:10.5px;font-weight:700;color:#5b6a82;margin-top:4px}
+.t-route .r{text-align:right}
+.t-route svg{width:30px;height:30px;fill:var(--orange);flex:none}
+.t-title{font-family:var(--display);font-size:clamp(24px,7.4vw,34px);word-break:keep-all;line-height:1.12;margin:16px 0 0;letter-spacing:-.01em;text-wrap:balance}
+.t-title em{font-style:normal;color:var(--orange)}
+.t-tag{display:inline-flex;gap:.3em;margin-top:12px;font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.04em}
+.t-tag span{color:var(--orange)}
+.t-stub{border-left:2px dashed var(--muted);padding:16px 10px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;text-align:center}
+.t-stub .k{font-family:var(--mono);font-size:9.5px;font-weight:700;color:#5b6a82;letter-spacing:.1em}
+.t-stub .v{font-family:var(--display);font-size:20px;line-height:1.1}
+.barcode{width:56px;height:46px;background:repeating-linear-gradient(90deg,var(--navy) 0 2px,transparent 2px 4px,var(--navy) 4px 5px,transparent 5px 8px,var(--navy) 8px 11px,transparent 11px 12px)}
+
+/* ── FORM ── */
+.screen{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.form{display:flex;flex-direction:column;gap:34px;width:min(100%,310px);margin:30px auto 0}
+.field label{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:6px}
+.field label span{font-family:var(--mono);color:#7d8aa0;letter-spacing:.08em;font-size:10.5px}
+.row{display:flex;align-items:baseline;gap:8px;border-bottom:3px solid var(--navy);padding-bottom:6px}
+.row b{font-size:21px;font-weight:900;flex:none}
+.row input{flex:1;min-width:0;border:0;outline:0;background:transparent;font-size:20px;font-weight:900;color:var(--navy);padding:0}
+.row input::placeholder{color:var(--muted);font-size:15px;font-weight:700}
+.row:focus-within{border-color:var(--orange)}
+
+.make{display:flex;align-items:center;justify-content:center;gap:10px;margin:44px auto 0;border:0;background:none;
+  font-size:24px;font-weight:900;color:var(--muted);cursor:pointer;padding:8px 12px;transition:color .2s}
+.make svg{width:30px;height:30px;fill:var(--orange-soft);transition:fill .2s,transform .3s}
+.make.on{color:var(--navy)}
+.make.on svg{fill:var(--orange)}
+.make.on:hover svg{transform:translateX(4px) rotate(-8deg)}
+.make:disabled{cursor:default}
+.make:focus-visible,.act:focus-visible,.ext:focus-visible{outline:2px solid var(--orange);outline-offset:3px;border-radius:6px}
+
+/* ── RESULT ── */
+.result{display:flex;flex-direction:column;align-items:center;margin-top:22px}
+.card-wrap{width:min(100%,400px);padding:18px 6px}
+.card-wrap img{display:block;width:100%;transform:rotate(-4deg);filter:drop-shadow(0 4px 12px rgba(16,34,63,.28));
+  animation:drop .55s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes drop{from{opacity:0;transform:rotate(-10deg) translate(-30px,14px) scale(.94)}to{opacity:1;transform:rotate(-4deg)}}
+.acts{display:flex;justify-content:space-between;width:min(100%,340px);margin-top:30px}
+.act{display:flex;align-items:center;gap:8px;border:0;background:none;font-size:25px;font-weight:900;color:var(--navy);cursor:pointer;padding:6px}
+.act svg{width:28px;height:28px;stroke:var(--orange);fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.act[aria-busy="true"]{color:var(--muted)}
+.act[aria-busy="true"] svg{stroke:var(--orange-soft)}
+.notice{width:100%;margin-top:30px;background:var(--sky);padding:20px 16px;text-align:center;font-size:13.5px;font-weight:500;line-height:1.7;letter-spacing:-.02em}
+.ext{margin-top:14px;border:0;background:var(--navy);color:#fff;font-size:14px;font-weight:700;padding:11px 20px;cursor:pointer}
+
+/* ── DOTS (탑승 진행) / FOOTER ── */
+.dots{display:flex;justify-content:center;gap:8px;margin:38px 0 0}
+.dot{width:18px;height:18px;border-radius:50%;background:var(--muted);animation:board 2.6s steps(1) infinite}
+@keyframes board{0%{background:var(--muted)}8%{background:var(--orange)}16%{background:var(--muted)}}
+footer{text-align:center;font-weight:700;font-size:15px;line-height:1.5;margin:22px 0 40px}
+footer #fSite{font-family:var(--mono);font-size:13px;color:#5b6a82}
+.toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:#fff;
+  font-size:14px;font-weight:700;padding:11px 18px;border-radius:999px;white-space:nowrap;z-index:9}
+@media (prefers-reduced-motion:reduce){.dot,.card-wrap img{animation:none}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <div class="ticket">
+      <div class="t-main">
+        <div class="t-top"><span class="bp">BOARDING PASS</span><span id="hFlight"></span></div>
+        <div class="t-route">
+          <div><b id="hFromCode"></b><small id="hFromName"></small></div>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" transform="rotate(90 12 12)"/></svg>
+          <div class="r"><b id="hToCode"></b><small id="hToName"></small></div>
+        </div>
+        <h1 class="t-title" id="hTitle"></h1>
+        <div class="t-tag"><span>[</span>Invitation Ticket<span>]</span></div>
+      </div>
+      <div class="t-stub">
+        <div><div class="k">DATE</div><div class="v" id="hDate"></div></div>
+        <div><div class="k">GATE</div><div class="v" id="hGate"></div></div>
+        <div class="barcode" aria-hidden="true"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 1) 입력 화면 -->
+  <section class="screen" id="formScreen">
+    <form class="form" id="form" autocomplete="off" novalidate>
+      <div class="field">
+        <label for="toInput">초대받는 친구 <span>PASSENGER</span></label>
+        <div class="row"><b>To.</b><input id="toInput" maxlength="8" placeholder="(입력하세요)" enterkeyhint="next"></div>
+      </div>
+      <div class="field">
+        <label for="fromInput">초대하는 나 <span>INVITED BY</span></label>
+        <div class="row"><b>From.</b><input id="fromInput" maxlength="8" placeholder="(입력하세요)" enterkeyhint="done"></div>
+      </div>
+    </form>
+    <button class="make" id="makeBtn" type="button" disabled>
+      탑승권 만들기
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" transform="rotate(90 12 12)"/></svg>
+    </button>
+  </section>
+
+  <!-- 2) 결과 화면 -->
+  <section class="screen" id="resultScreen" hidden>
+    <div class="result">
+      <div class="card-wrap"><img id="cardImg" alt="완성된 탑승권 초대장"></div>
+      <div class="acts">
+        <button class="act" id="saveBtn" type="button"><span id="saveTxt">저장하기</span>
+          <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 3v22M3 14h22"/></svg></button>
+        <button class="act" id="retryBtn" type="button">다시하기
+          <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M5 12a9 9 0 0 1 16-4l2 2M23 4v6h-6M23 16a9 9 0 0 1-16 4l-2-2M5 24v-6h6"/></svg></button>
+      </div>
+      <div class="notice" id="notice">
+        앱 안에서 열린 브라우저에서는 저장이 잘 안 될 수 있어요.<br>
+        메뉴(···)에서 ‘다른 브라우저로 열기’를 선택해 주세요.<br>
+        <button class="ext" id="extBtn" type="button">외부 브라우저로 열기</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="dots" id="dots" aria-hidden="true"></div>
+  <footer><div id="fHandle"></div><div id="fSite"></div></footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* =====================================================================
+   CONFIG — 여기만 수정하면 됩니다
+   ===================================================================== */
+const CONFIG = {
+  event: {
+    church: '천안장로교회',
+    title: ['천안장로교회 고등부', '<em>LIVING HOPE</em> 전도축제'],   // 히어로 제목 (<em>은 주황 강조)
+    flight: 'LH 1101',               // 편명 느낌의 코드
+    route: { from: ['CAN', '천안 어디서든'], to: ['YTH', '고등부 예배'] },
+    date: '11.01', day: '주일',
+    fullDate: '2026.11.01 (주일)',
+    time: '오전 11:00',
+    gate: '글로리홀',
+    band: 'LIVING HOPE 전도축제 · 고등부 예배 + 운동교제 · 비전센터 3F',
+    seat: '내 옆자리',
+  },
+  footer: { handle: '천안장로교회 고등부', site: '@capc_hs' },
+
+  // 초대장 이미지 (같은 폴더 파일명 또는 URL). 비워두면 임시 탑승권을 그려서 사용
+  cardImage: '',            // 예: 'card.png'
+  cardSize: [1200, 600],
+
+  // 이름 위치 — 이미지 픽셀 기준. 이미지에 라벨이 이미 있으면 prefix ''
+  slots: {
+    to:   { x: 60,  y: 318, size: 78, align: 'left', prefix: '', fill: '#10223f', font: 'display' },
+    from: { x: 60,  y: 470, size: 40, align: 'left', prefix: '', fill: '#ff5a1f', font: 'display' },
+  },
+
+  fileName: name => `탑승권_${name}.png`,
+  noticeMode: 'always',     // 'always' 항상 표시 / 'inapp' 카톡·인스타 등 인앱브라우저에서만
+};
+/* ===================================================================== */
+
+const $ = id => document.getElementById(id);
+const F_DISPLAY = '"Black Han Sans","Noto Sans KR",sans-serif';
+const F_BODY = '"Noto Sans KR","Apple SD Gothic Neo",sans-serif';
+const F_MONO = '"IBM Plex Mono",monospace';
+const E = CONFIG.event;
+let cardBlob = null, cardURL = null, toName = '';
+
+/* ── 정적 텍스트 ── */
+$('hFlight').textContent = E.flight;
+$('hFromCode').textContent = E.route.from[0]; $('hFromName').textContent = E.route.from[1];
+$('hToCode').textContent = E.route.to[0];     $('hToName').textContent = E.route.to[1];
+$('hTitle').innerHTML = E.title.join('<br>');
+$('hDate').textContent = E.date; $('hGate').textContent = E.gate;
+$('fHandle').textContent = CONFIG.footer.handle;
+$('fSite').textContent = CONFIG.footer.site;
+for (let i = 0; i < 13; i++) {
+  const d = document.createElement('span');
+  d.className = 'dot'; d.style.animationDelay = `${i * 0.2}s`;
+  $('dots').appendChild(d);
+}
+
+/* ── 인앱브라우저 ── */
+const UA = navigator.userAgent;
+const IN_APP = /KAKAOTALK|Instagram|FBAN|FBAV|Line\/|NAVER|DaumApps|everytimeApp|band/i.test(UA);
+if (CONFIG.noticeMode === 'inapp' && !IN_APP) $('notice').hidden = true;
+
+/* ── 입력 ── */
+const toI = $('toInput'), fromI = $('fromInput'), makeBtn = $('makeBtn');
+function sync() {
+  const ok = toI.value.trim() && fromI.value.trim();
+  makeBtn.disabled = !ok; makeBtn.classList.toggle('on', !!ok);
+}
+toI.addEventListener('input', sync); fromI.addEventListener('input', sync);
+toI.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); fromI.focus(); } });
+fromI.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); fromI.blur(); if (!makeBtn.disabled) make(); } });
+$('form').addEventListener('submit', e => e.preventDefault());
+makeBtn.addEventListener('click', make);
+
+/* ── 그리기 유틸 ── */
+function loadImg(src) {
+  return new Promise((res, rej) => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => res(im); im.onerror = rej; im.src = src; });
+}
+function fontOf(k) { return k === 'display' ? F_DISPLAY : k === 'mono' ? F_MONO : F_BODY; }
+function txt(ctx, t, x, y, { size = 24, w = 700, font = 'body', color = '#10223f', align = 'left', ls = 0 } = {}) {
+  ctx.font = `${font === 'display' ? 400 : w} ${size}px ${fontOf(font)}`;
+  ctx.textAlign = align; ctx.fillStyle = color; ctx.textBaseline = 'alphabetic';
+  if ('letterSpacing' in ctx) ctx.letterSpacing = `${ls}px`;
+  ctx.fillText(t, x, y);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+}
+function fitText(ctx, s, text, maxW) {
+  let size = s.size;
+  ctx.font = `${s.font === 'display' ? 400 : 900} ${size}px ${fontOf(s.font)}`;
+  while (ctx.measureText(text).width > maxW && size > 20) { size -= 2; ctx.font = `${s.font === 'display' ? 400 : 900} ${size}px ${fontOf(s.font)}`; }
+  return size;
+}
+function plane(ctx, x, y, s, color) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI / 2); ctx.scale(s / 24, s / 24); ctx.translate(-12, -12);
+  ctx.fillStyle = color;
+  ctx.fill(new Path2D('M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z'));
+  ctx.restore();
+}
+function hash(str) { let h = 2166136261; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+function drawPlaceholder(ctx, W, H, seed) {
+  const NAVY = '#10223f', OR = '#ff5a1f', GREY = '#6b7890', STUB = 860;
+  // 바탕 + 둥근 모서리
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.roundRect(0, 0, W, H, 28); ctx.fill();
+  // 상단 밴드
+  ctx.save(); ctx.beginPath(); ctx.roundRect(0, 0, W, H, 28); ctx.clip();
+  ctx.fillStyle = NAVY; ctx.fillRect(0, 0, W, 104);
+  ctx.fillStyle = OR; ctx.fillRect(STUB, 0, W - STUB, 104);
+  ctx.restore();
+  txt(ctx, 'BOARDING PASS', 60, 68, { size: 40, font: 'display', color: '#fff', ls: 2 });
+  txt(ctx, `${E.church} 고등부`, STUB - 40, 64, { size: 24, w: 700, color: '#c9d4e8', align: 'right' });
+  txt(ctx, '탑승권', W - 170, 68, { size: 38, font: 'display', color: '#fff', align: 'center' });
+
+  // 라벨
+  txt(ctx, 'PASSENGER  초대받은 친구', 60, 196, { size: 20, font: 'mono', w: 700, color: GREY, ls: 1 });
+  txt(ctx, 'INVITED BY  초대한 친구', 60, 410, { size: 20, font: 'mono', w: 700, color: GREY, ls: 1 });
+
+  // 루트
+  txt(ctx, E.route.from[0], 480, 268, { size: 64, font: 'mono', w: 700, color: NAVY });
+  txt(ctx, E.route.to[0], 820, 268, { size: 64, font: 'mono', w: 700, color: NAVY, align: 'right' });
+  plane(ctx, 650, 246, 40, OR);
+  txt(ctx, E.route.from[1], 482, 300, { size: 18, w: 700, color: GREY });
+  txt(ctx, E.route.to[1], 820, 300, { size: 18, w: 700, color: GREY, align: 'right' });
+
+  // 정보 그리드
+  const cells = [['DATE', E.fullDate], ['TIME', E.time], ['GATE', E.gate], ['SEAT', E.seat]];
+  cells.forEach(([k, v], i) => {
+    const x = 480 + (i % 2) * 210, y = 380 + Math.floor(i / 2) * 100;
+    txt(ctx, k, x, y, { size: 17, font: 'mono', w: 700, color: GREY, ls: 1.5 });
+    txt(ctx, v, x, y + 38, { size: i === 0 ? 22 : 28, w: 900, color: NAVY });
+  });
+
+  // 하단 행사명
+  ctx.fillStyle = '#e8eef8'; ctx.fillRect(0, H - 70, STUB, 70);
+  txt(ctx, E.band, 60, H - 26, { size: 23, w: 900, color: NAVY });
+
+  // 절취선 + 노치
+  ctx.save(); ctx.globalCompositeOperation = 'destination-out';
+  [0, H].forEach(y => { ctx.beginPath(); ctx.arc(STUB, y, 26, 0, Math.PI * 2); ctx.fill(); });
+  ctx.restore();
+  ctx.strokeStyle = '#b3bccb'; ctx.lineWidth = 4; ctx.setLineDash([14, 12]);
+  ctx.beginPath(); ctx.moveTo(STUB, 40); ctx.lineTo(STUB, H - 40); ctx.stroke(); ctx.setLineDash([]);
+
+  // 스텁
+  const sx = STUB + (W - STUB) / 2;
+  txt(ctx, 'FLIGHT', sx, 170, { size: 17, font: 'mono', w: 700, color: GREY, align: 'center', ls: 1.5 });
+  txt(ctx, E.flight, sx, 210, { size: 32, font: 'mono', w: 700, color: NAVY, align: 'center' });
+  txt(ctx, 'DATE', sx, 268, { size: 17, font: 'mono', w: 700, color: GREY, align: 'center', ls: 1.5 });
+  txt(ctx, `${E.date} ${E.day}`, sx, 312, { size: 40, font: 'display', color: NAVY, align: 'center' });
+  // 바코드 (이름 기반)
+  let r = seed || 1; const bx = STUB + 50, bw = W - STUB - 100; let x = bx;
+  ctx.fillStyle = NAVY;
+  while (x < bx + bw) { r = Math.imul(r ^ (r >>> 15), 2246822507) >>> 0; const w = 2 + (r % 4) * 2; if ((r >> 5) & 1) ctx.fillRect(x, 360, Math.min(w, bx + bw - x), 110); x += w + 3; }
+  txt(ctx, `No. ${String(seed % 10000).padStart(4, '0')}`, sx, 506, { size: 18, font: 'mono', w: 500, color: GREY, align: 'center', ls: 2 });
+
+  // WELCOME 스탬프
+  ctx.save(); ctx.translate(640, 150); ctx.rotate(-0.12); ctx.globalAlpha = .9;
+  ctx.strokeStyle = OR; ctx.lineWidth = 5; ctx.beginPath(); ctx.roundRect(-92, -34, 184, 68, 10); ctx.stroke();
+  txt(ctx, 'WELCOME', 0, 13, { size: 36, font: 'display', color: OR, align: 'center', ls: 2 });
+  ctx.restore();
+}
+
+async function make() {
+  const to = toI.value.trim(), from = fromI.value.trim();
+  if (!to || !from) return;
+  makeBtn.disabled = true;
+  try {
+    // 웹폰트는 글자 묶음(subset)별로 내려오므로, 캔버스에 그릴 실제 글자를 넘겨 미리 로드
+    const allText = [to, from, E.church, E.title.join(' ').replace(/<[^>]+>/g, ''), E.band, E.fullDate, E.time, E.gate, E.seat,
+      E.date, E.day, E.flight, E.route.from.join(' '), E.route.to.join(' '),
+      'BOARDING PASS 탑승권 고등부 PASSENGER 초대받은 친구 INVITED BY 초대한 FLIGHT DATE TIME GATE SEAT WELCOME No. 0123456789'].join(' ');
+    await Promise.all([
+      document.fonts.load(`400 60px "Black Han Sans"`, allText), document.fonts.load(`900 30px "Noto Sans KR"`, allText),
+      document.fonts.load(`700 30px "Noto Sans KR"`, allText), document.fonts.load(`500 30px "Noto Sans KR"`, allText),
+      document.fonts.load(`700 30px "IBM Plex Mono"`, allText), document.fonts.load(`500 30px "IBM Plex Mono"`, allText),
+    ]).catch(() => {});
+    const cv = document.createElement('canvas'), ctx = cv.getContext('2d');
+    if (CONFIG.cardImage) {
+      const im = await loadImg(CONFIG.cardImage);
+      cv.width = im.naturalWidth; cv.height = im.naturalHeight; ctx.drawImage(im, 0, 0);
+    } else {
+      [cv.width, cv.height] = CONFIG.cardSize;
+      drawPlaceholder(ctx, cv.width, cv.height, hash(to + from));
+    }
+    const S = CONFIG.slots;
+    [[S.to, S.to.prefix + to], [S.from, S.from.prefix + from]].forEach(([s, t]) => {
+      const size = fitText(ctx, s, t, 420);
+      txt(ctx, t, s.x, s.y, { size, w: 900, font: s.font, color: s.fill, align: s.align });
+    });
+    cardBlob = await new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('blob')), 'image/png'));
+    if (cardURL) URL.revokeObjectURL(cardURL);
+    cardURL = URL.createObjectURL(cardBlob); toName = to;
+    $('cardImg').src = cardURL;
+    $('formScreen').hidden = true; $('resultScreen').hidden = false;
+    requestAnimationFrame(() => $('resultScreen').scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  } catch (err) {
+    console.error(err); toast('초대장 이미지를 불러오지 못했어요. 이미지 경로를 확인해 주세요.');
+  } finally { sync(); }
+}
+
+/* ── 저장 ── */
+let dl = null;
+if (window.claude && window.claude.use) window.claude.use('downloads').then(ns => { dl = ns; }).catch(() => {});
+$('saveBtn').addEventListener('click', async () => {
+  if (!cardBlob) return;
+  const btn = $('saveBtn'); if (btn.getAttribute('aria-busy') === 'true') return;
+  btn.setAttribute('aria-busy', 'true'); $('saveTxt').textContent = '저장 중...';
+  const name = CONFIG.fileName(toName);
+  try {
+    if (dl) {
+      try { await dl.save({ filename: name, data: cardBlob }); toast('저장했어요.'); }
+      catch (e) { if (e && e.code !== 'declined') toast('이미지를 길게 눌러 저장해 주세요.'); }
+      return;
+    }
+    const file = new File([cardBlob], name, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
+    else {
+      const a = document.createElement('a'); a.href = cardURL; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      if (IN_APP) toast('저장이 안 되면 이미지를 길게 눌러 저장해 주세요.');
+    }
+  } catch (e) { if (e && e.name !== 'AbortError') toast('이미지를 길게 눌러 저장해 주세요.'); }
+  finally { setTimeout(() => { btn.removeAttribute('aria-busy'); $('saveTxt').textContent = '저장하기'; }, 600); }
+});
+
+/* ── 다시하기 ── */
+$('retryBtn').addEventListener('click', () => {
+  toI.value = ''; fromI.value = ''; sync();
+  $('resultScreen').hidden = true; $('formScreen').hidden = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+/* ── 외부 브라우저 ── */
+$('extBtn').addEventListener('click', async () => {
+  const url = location.href;
+  if (/KAKAOTALK/i.test(UA)) { location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url); return; }
+  if (/Android/i.test(UA)) { location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end'; return; }
+  try { await navigator.clipboard.writeText(url); toast('주소를 복사했어요. Safari에 붙여넣어 열어주세요.'); }
+  catch { toast('메뉴(···)에서 ‘다른 브라우저로 열기’를 선택해 주세요.'); }
+});
+
+let tT;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(tT); tT = setTimeout(() => t.hidden = true, 2600); }
+</script>
+</body>
+</html>
