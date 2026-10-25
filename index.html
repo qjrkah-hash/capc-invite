@@ -41,10 +41,11 @@ button,input{font-family:inherit}
 .t-top{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.12em}
 .t-top .bp{background:var(--navy);color:#fff;padding:3px 7px;border-radius:4px}
 .t-route{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
-.t-route b{font-family:var(--mono);font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1}
+.t-route b{font-family:var(--mono);font-size:clamp(13px,4vw,20px);font-weight:700;letter-spacing:-.01em;line-height:1.1}
+.t-route .r b{font-family:var(--display);font-weight:400;font-size:clamp(18px,5.4vw,26px);letter-spacing:0}
 .t-route small{display:block;font-size:10.5px;font-weight:700;color:#5b6a82;margin-top:4px}
 .t-route .r{text-align:right}
-.t-route svg{width:30px;height:30px;fill:var(--orange);flex:none}
+.t-route svg{width:24px;height:24px;fill:var(--orange);flex:none}
 .t-title{font-family:var(--display);font-size:clamp(24px,7.4vw,34px);word-break:keep-all;line-height:1.12;margin:16px 0 0;letter-spacing:-.01em;text-wrap:balance}
 .t-title em{font-style:normal;color:var(--orange)}
 .t-legs{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:5px;font-size:13px;font-weight:700;line-height:1.35}
@@ -189,14 +190,14 @@ const CONFIG = {
     church: '천안장로교회',
     title: ['천안장로교회 고등부', '<em>LIVING HOPE</em> 전도축제'],   // 히어로 제목 (<em>은 주황 강조)
     flight: 'LH 1101',               // 편명 느낌의 코드
-    route: { from: ['CAN', '천안 어디서든'], to: ['YTH', '고등부 예배'] },
+    route: { from: ['EVERYWHERE', '어디서든 출발'], to: ['천장고등부', '천안장로교회 고등부'] },
     legs: [
       { tag: 'DAY 1', when: '10.31 (토) 오후 2–5시', where: '본당 · 비전센터 · 주차장' },
-      { tag: 'DAY 2', when: '11.01 (주일) 오전 11시', where: '고등부 예배 + 운동교제 · 글로리홀' },
+      { tag: 'DAY 2', when: '11.01 (주일) 오전 11시', where: '비전센터 3F 글로리홀' },
     ],
     stubDate: '10.31 - 11.01',
     heroStub: [['DATE', '10.31<br>11.01'], ['DAYS', '토<br>주일']],
-    band: 'LIVING HOPE 전도축제 · 벧전 1:3 · 찬양 브라이언 킴',
+    band: 'LIVING HOPE 전도축제 · 찬양 브라이언 킴, 체험부스, 푸드코트',
   },
   footer: { handle: '천안장로교회 고등부', site: '@capc_hs' },
 
@@ -220,7 +221,7 @@ const CONFIG = {
     from: { x: 60,  y: 470, size: 40, align: 'left', prefix: '', fill: '#ff5a1f', font: 'display' },
   },
 
-  fileName: name => `탑승권_${name}.png`,
+  fileName: name => `전도축제 초대장_${name}.png`,
   noticeMode: 'always',     // 'always' 항상 표시 / 'inapp' 카톡·인스타 등 인앱브라우저에서만
 };
 /* ===================================================================== */
@@ -323,11 +324,13 @@ function drawPlaceholder(ctx, W, H, seed, qrIm) {
   txt(ctx, 'INVITED BY  초대한 친구', 60, 410, { size: 20, font: 'mono', w: 700, color: GREY, ls: 1 });
 
   // 루트
-  txt(ctx, E.route.from[0], 480, 268, { size: 64, font: 'mono', w: 700, color: NAVY });
-  txt(ctx, E.route.to[0], 820, 268, { size: 64, font: 'mono', w: 700, color: NAVY, align: 'right' });
-  plane(ctx, 650, 246, 40, OR);
+  // 출발지·도착지: 각 150px 안에 맞게 자동 크기
+  const fitW = (t, font, w, max, maxW) => { let z = max; ctx.font = `${w} ${z}px ${font}`; while (ctx.measureText(t).width > maxW && z > 16) { z -= 1; ctx.font = `${w} ${z}px ${font}`; } return z; };
+  txt(ctx, E.route.from[0], 480, 266, { size: fitW(E.route.from[0], F_MONO, 700, 44, 135), font: 'mono', w: 700, color: NAVY });
+  txt(ctx, E.route.to[0], 838, 266, { size: fitW(E.route.to[0], F_DISPLAY, 400, 48, 135), font: 'display', color: NAVY, align: 'right' });
+  plane(ctx, 660, 254, 32, OR);
   txt(ctx, E.route.from[1], 482, 300, { size: 18, w: 700, color: GREY });
-  txt(ctx, E.route.to[1], 820, 300, { size: 18, w: 700, color: GREY, align: 'right' });
+  txt(ctx, E.route.to[1], 838, 300, { size: 18, w: 700, color: GREY, align: 'right' });
 
   // 정보 그리드
   E.legs.forEach((l, i) => {
@@ -431,8 +434,7 @@ $('saveBtn').addEventListener('click', async () => {
     // 아이폰: 공유창(사진 저장) / 안드로이드: 바로 다운로드(갤러리에 표시)
     if (!IS_ANDROID && navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
     else {
-      // 한글 파일명은 일부 안드로이드 크롬에서 'download'(확장자 없음)로 저장됨 → 영문 파일명 사용
-      const a = document.createElement('a'); a.href = cardURL; a.download = `LIVINGHOPE_ticket_${Date.now().toString(36)}.png`;
+      const a = document.createElement('a'); a.href = cardURL; a.download = name;
       document.body.appendChild(a); a.click(); a.remove();
       if (IN_APP) toast('저장이 안 되면 이미지를 길게 눌러 저장해 주세요.');
     }
