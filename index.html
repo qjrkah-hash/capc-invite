@@ -47,6 +47,9 @@ button,input{font-family:inherit}
 .t-route svg{width:30px;height:30px;fill:var(--orange);flex:none}
 .t-title{font-family:var(--display);font-size:clamp(24px,7.4vw,34px);word-break:keep-all;line-height:1.12;margin:16px 0 0;letter-spacing:-.01em;text-wrap:balance}
 .t-title em{font-style:normal;color:var(--orange)}
+.t-legs{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:5px;font-size:13px;font-weight:700;line-height:1.35}
+.t-legs b{font-family:var(--mono);color:var(--orange);font-size:11px;letter-spacing:.06em;margin-right:6px}
+.t-legs small{display:block;font-size:11px;font-weight:500;color:#5b6a82;padding-left:48px}
 .t-tag{display:inline-flex;gap:.3em;margin-top:12px;font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.04em}
 .t-tag span{color:var(--orange)}
 .t-stub{border-left:2px dashed var(--muted);padding:16px 10px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;text-align:center}
@@ -112,11 +115,12 @@ footer #fSite{font-family:var(--mono);font-size:13px;color:#5b6a82}
           <div class="r"><b id="hToCode"></b><small id="hToName"></small></div>
         </div>
         <h1 class="t-title" id="hTitle"></h1>
+        <ul class="t-legs" id="hLegs"></ul>
         <div class="t-tag"><span>[</span>Invitation Ticket<span>]</span></div>
       </div>
       <div class="t-stub">
-        <div><div class="k">DATE</div><div class="v" id="hDate"></div></div>
-        <div><div class="k">GATE</div><div class="v" id="hGate"></div></div>
+        <div><div class="k" id="hK1"></div><div class="v" id="hDate"></div></div>
+        <div><div class="k" id="hK2"></div><div class="v" id="hGate"></div></div>
         <div class="barcode" aria-hidden="true"></div>
       </div>
     </div>
@@ -173,12 +177,13 @@ const CONFIG = {
     title: ['천안장로교회 고등부', '<em>LIVING HOPE</em> 전도축제'],   // 히어로 제목 (<em>은 주황 강조)
     flight: 'LH 1101',               // 편명 느낌의 코드
     route: { from: ['CAN', '천안 어디서든'], to: ['YTH', '고등부 예배'] },
-    date: '11.01', day: '주일',
-    fullDate: '2026.11.01 (주일)',
-    time: '오전 11:00',
-    gate: '글로리홀',
-    band: 'LIVING HOPE 전도축제 · 고등부 예배 + 운동교제 · 비전센터 3F',
-    seat: '내 옆자리',
+    legs: [
+      { tag: 'DAY 1', when: '10.31 (토) 오후 2–5시', where: '본당 · 비전센터 · 주차장' },
+      { tag: 'DAY 2', when: '11.01 (주일) 오전 11시', where: '고등부 예배 + 운동교제 · 글로리홀' },
+    ],
+    stubDate: '10.31 - 11.01',
+    heroStub: [['DATE', '10.31<br>11.01'], ['DAYS', '토<br>주일']],
+    band: 'LIVING HOPE 전도축제 · 벧전 1:3 · 찬양 브라이언 킴',
   },
   footer: { handle: '천안장로교회 고등부', site: '@capc_hs' },
 
@@ -209,7 +214,15 @@ $('hFlight').textContent = E.flight;
 $('hFromCode').textContent = E.route.from[0]; $('hFromName').textContent = E.route.from[1];
 $('hToCode').textContent = E.route.to[0];     $('hToName').textContent = E.route.to[1];
 $('hTitle').innerHTML = E.title.join('<br>');
-$('hDate').textContent = E.date; $('hGate').textContent = E.gate;
+$('hK1').textContent = E.heroStub[0][0]; $('hDate').innerHTML = E.heroStub[0][1];
+$('hK2').textContent = E.heroStub[1][0]; $('hGate').innerHTML = E.heroStub[1][1];
+E.legs.forEach(l => {
+  const li = document.createElement('li');
+  const b = document.createElement('b'); b.textContent = l.tag;
+  const s = document.createElement('small'); s.textContent = l.where;
+  li.append(b, document.createTextNode(l.when), s);
+  $('hLegs').appendChild(li);
+});
 $('fHandle').textContent = CONFIG.footer.handle;
 $('fSite').textContent = CONFIG.footer.site;
 for (let i = 0; i < 13; i++) {
@@ -287,11 +300,11 @@ function drawPlaceholder(ctx, W, H, seed) {
   txt(ctx, E.route.to[1], 820, 300, { size: 18, w: 700, color: GREY, align: 'right' });
 
   // 정보 그리드
-  const cells = [['DATE', E.fullDate], ['TIME', E.time], ['GATE', E.gate], ['SEAT', E.seat]];
-  cells.forEach(([k, v], i) => {
-    const x = 480 + (i % 2) * 210, y = 380 + Math.floor(i / 2) * 100;
-    txt(ctx, k, x, y, { size: 17, font: 'mono', w: 700, color: GREY, ls: 1.5 });
-    txt(ctx, v, x, y + 38, { size: i === 0 ? 22 : 28, w: 900, color: NAVY });
+  E.legs.forEach((l, i) => {
+    const y = 360 + i * 84;
+    txt(ctx, l.tag, 480, y, { size: 17, font: 'mono', w: 700, color: OR, ls: 1.5 });
+    txt(ctx, l.when, 480, y + 32, { size: 25, w: 900, color: NAVY });
+    txt(ctx, l.where, 480, y + 58, { size: 17, w: 700, color: GREY });
   });
 
   // 하단 행사명
@@ -310,7 +323,7 @@ function drawPlaceholder(ctx, W, H, seed) {
   txt(ctx, 'FLIGHT', sx, 170, { size: 17, font: 'mono', w: 700, color: GREY, align: 'center', ls: 1.5 });
   txt(ctx, E.flight, sx, 210, { size: 32, font: 'mono', w: 700, color: NAVY, align: 'center' });
   txt(ctx, 'DATE', sx, 268, { size: 17, font: 'mono', w: 700, color: GREY, align: 'center', ls: 1.5 });
-  txt(ctx, `${E.date} ${E.day}`, sx, 312, { size: 40, font: 'display', color: NAVY, align: 'center' });
+  txt(ctx, E.stubDate, sx, 312, { size: 32, font: 'display', color: NAVY, align: 'center' });
   // 바코드 (이름 기반)
   let r = seed || 1; const bx = STUB + 50, bw = W - STUB - 100; let x = bx;
   ctx.fillStyle = NAVY;
@@ -330,8 +343,8 @@ async function make() {
   makeBtn.disabled = true;
   try {
     // 웹폰트는 글자 묶음(subset)별로 내려오므로, 캔버스에 그릴 실제 글자를 넘겨 미리 로드
-    const allText = [to, from, E.church, E.title.join(' ').replace(/<[^>]+>/g, ''), E.band, E.fullDate, E.time, E.gate, E.seat,
-      E.date, E.day, E.flight, E.route.from.join(' '), E.route.to.join(' '),
+    const allText = [to, from, E.church, E.title.join(' ').replace(/<[^>]+>/g, ''), E.band, E.stubDate, E.legs.map(l => l.tag + l.when + l.where).join(' '), '토 주일 DAYS',
+      E.flight, E.route.from.join(' '), E.route.to.join(' '),
       'BOARDING PASS 탑승권 고등부 PASSENGER 초대받은 친구 INVITED BY 초대한 FLIGHT DATE TIME GATE SEAT WELCOME No. 0123456789'].join(' ');
     await Promise.all([
       document.fonts.load(`400 60px "Black Han Sans"`, allText), document.fonts.load(`900 30px "Noto Sans KR"`, allText),
