@@ -88,6 +88,15 @@ button,input{font-family:inherit}
 .act svg{width:28px;height:28px;stroke:var(--orange);fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
 .act[aria-busy="true"]{color:var(--muted)}
 .act[aria-busy="true"] svg{stroke:var(--orange-soft)}
+.signup{width:100%;margin-top:34px;display:flex;gap:16px;align-items:center;border:2px solid var(--navy);padding:16px}
+.signup img{width:104px;height:104px;flex:none;image-rendering:pixelated}
+.su-txt{min-width:0;display:flex;flex-direction:column;gap:5px}
+.su-txt b{font-size:17px;font-weight:900}
+.su-txt b::before{content:"";display:inline-block;width:8px;height:8px;background:var(--orange);border-radius:50%;margin-right:7px;vertical-align:middle}
+.su-txt p{margin:0;word-break:keep-all;font-size:13px;font-weight:500;line-height:1.5;letter-spacing:-.02em}
+.su-txt .due{font-size:12px;font-weight:700;color:var(--orange)}
+.su-btn{align-self:flex-start;margin-top:4px;background:var(--orange);color:#fff;font-size:13.5px;font-weight:700;padding:8px 14px;text-decoration:none}
+.su-btn:focus-visible{outline:2px solid var(--navy);outline-offset:3px}
 .notice{width:100%;margin-top:30px;background:var(--sky);padding:20px 16px;text-align:center;font-size:13.5px;font-weight:500;line-height:1.7;letter-spacing:-.02em}
 .ext{margin-top:14px;border:0;background:var(--navy);color:#fff;font-size:14px;font-weight:700;padding:11px 20px;cursor:pointer}
 
@@ -154,6 +163,15 @@ footer #fSite{font-family:var(--mono);font-size:13px;color:#5b6a82}
         <button class="act" id="retryBtn" type="button">다시하기
           <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M5 12a9 9 0 0 1 16-4l2 2M23 4v6h-6M23 16a9 9 0 0 1-16 4l-2-2M5 24v-6h6"/></svg></button>
       </div>
+      <div class="signup">
+        <img id="qrImg" alt="와우축제 사전접수 QR 코드">
+        <div class="su-txt">
+          <b id="suTitle"></b>
+          <p id="suDesc"></p>
+          <p class="due" id="suDue"></p>
+          <a class="su-btn" id="suBtn" target="_blank" rel="noopener">사전접수 하러 가기 →</a>
+        </div>
+      </div>
       <div class="notice" id="notice">
         앱 안에서 열린 브라우저에서는 저장이 잘 안 될 수 있어요.<br>
         메뉴(···)에서 ‘다른 브라우저로 열기’를 선택해 주세요.<br>
@@ -186,6 +204,15 @@ const CONFIG = {
     band: 'LIVING HOPE 전도축제 · 벧전 1:3 · 찬양 브라이언 킴',
   },
   footer: { handle: '천안장로교회 고등부', site: '@capc_hs' },
+
+  // 전도축제 사전접수 (QR 원본 링크)
+  signup: {
+    url: 'https://m.site.naver.com/2iYtX',
+    title: '와우축제 사전접수',
+    desc: '전도축제에 오기 전에 QR을 찍어 인적사항을 미리 등록해 주세요.',
+    due: '사전접수 10.30(금) 오후 6시까지 · 이후에는 당일 현장 접수',
+    cardDue: '~10.30(금) 18시까지',
+  },
 
   // 초대장 이미지 (같은 폴더 파일명 또는 URL). 비워두면 임시 탑승권을 그려서 사용
   cardImage: '',            // 예: 'card.png'
@@ -225,6 +252,12 @@ E.legs.forEach(l => {
 });
 $('fHandle').textContent = CONFIG.footer.handle;
 $('fSite').textContent = CONFIG.footer.site;
+const QR_SRC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUoAAAFKAQMAAABB54RGAAAABlBMVEUQIj////+1RgnVAAABpUlEQVR42u2bQY7DMAhFUXsAHylXz5FyAEseB/wx7WxaaUb6i8/Cqh1WeQI+OLXxqZ0mV7nK9SvXy5Yd11rm2XP4gkdzez7sY5Pr/7iCzDQ7nF/r8/RejpuWn7mLaLHQ8uiZZPpvghFvokVIy2NrBLeZJZ+iRUzLodxnkQ5Fi7puXWabm4ea6hYdra0JE1Qu0oRktN4MidHrVhX7elkUtDp+t6TVbpXRBpApE1KpDO+JXQ4aVIbrjVLaRIsmE261bm2kwOhlK1o0tFZERaHqCKYYaBhyol4WVd3aPXE+QHZUJiSiFT3xjrK32FLd4uqOz+y39lRjqUMpeEpaUZ6q6IBYFC2uuuX6L/FERKXoWFu9LJp+KxVFSg2MdiEWRYusbsXkKadRiVGZkItWWsmJrjdiBqXYosuEuN/fnRdM91tck6cyfm8v9/ueGBVbRLFVQwj5b7x0XqpbdHVr0Wr5yxRbnHUrv8GIy5J68a+6xUsrpIaVmy5Nnlhp1c/UoAkxLBQtvm+eMMbI7vjCVrTINGHOMuKypAw0RIuv39JfPOQq1z9z/QGL6hYnQBjjbwAAAABJRU5ErkJggg==';
+$('qrImg').src = QR_SRC;
+$('suTitle').textContent = CONFIG.signup.title;
+$('suDesc').textContent = CONFIG.signup.desc;
+$('suDue').textContent = CONFIG.signup.due;
+$('suBtn').href = CONFIG.signup.url;
 for (let i = 0; i < 13; i++) {
   const d = document.createElement('span');
   d.className = 'dot'; d.style.animationDelay = `${i * 0.2}s`;
@@ -274,7 +307,7 @@ function plane(ctx, x, y, s, color) {
 }
 function hash(str) { let h = 2166136261; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 
-function drawPlaceholder(ctx, W, H, seed) {
+function drawPlaceholder(ctx, W, H, seed, qrIm) {
   const NAVY = '#10223f', OR = '#ff5a1f', GREY = '#6b7890', STUB = 860;
   // 바탕 + 둥근 모서리
   ctx.fillStyle = '#fff';
@@ -324,11 +357,12 @@ function drawPlaceholder(ctx, W, H, seed) {
   txt(ctx, E.flight, sx, 210, { size: 32, font: 'mono', w: 700, color: NAVY, align: 'center' });
   txt(ctx, 'DATE', sx, 268, { size: 17, font: 'mono', w: 700, color: GREY, align: 'center', ls: 1.5 });
   txt(ctx, E.stubDate, sx, 312, { size: 32, font: 'display', color: NAVY, align: 'center' });
-  // 바코드 (이름 기반)
-  let r = seed || 1; const bx = STUB + 50, bw = W - STUB - 100; let x = bx;
-  ctx.fillStyle = NAVY;
-  while (x < bx + bw) { r = Math.imul(r ^ (r >>> 15), 2246822507) >>> 0; const w = 2 + (r % 4) * 2; if ((r >> 5) & 1) ctx.fillRect(x, 360, Math.min(w, bx + bw - x), 110); x += w + 3; }
-  txt(ctx, `No. ${String(seed % 10000).padStart(4, '0')}`, sx, 506, { size: 18, font: 'mono', w: 500, color: GREY, align: 'center', ls: 2 });
+  // 사전접수 QR
+  const qs = 168; ctx.imageSmoothingEnabled = false;
+  if (qrIm) ctx.drawImage(qrIm, sx - qs / 2, 338, qs, qs);
+  ctx.imageSmoothingEnabled = true;
+  txt(ctx, CONFIG.signup.title, sx, 536, { size: 20, w: 900, color: NAVY, align: 'center' });
+  txt(ctx, CONFIG.signup.cardDue, sx, 562, { size: 15, w: 700, color: OR, align: 'center' });
 
   // WELCOME 스탬프
   ctx.save(); ctx.translate(640, 150); ctx.rotate(-0.12); ctx.globalAlpha = .9;
@@ -343,7 +377,7 @@ async function make() {
   makeBtn.disabled = true;
   try {
     // 웹폰트는 글자 묶음(subset)별로 내려오므로, 캔버스에 그릴 실제 글자를 넘겨 미리 로드
-    const allText = [to, from, E.church, E.title.join(' ').replace(/<[^>]+>/g, ''), E.band, E.stubDate, E.legs.map(l => l.tag + l.when + l.where).join(' '), '토 주일 DAYS',
+    const allText = [to, from, E.church, E.title.join(' ').replace(/<[^>]+>/g, ''), E.band, E.stubDate, E.legs.map(l => l.tag + l.when + l.where).join(' '), '토 주일 DAYS', CONFIG.signup.title, CONFIG.signup.cardDue,
       E.flight, E.route.from.join(' '), E.route.to.join(' '),
       'BOARDING PASS 탑승권 고등부 PASSENGER 초대받은 친구 INVITED BY 초대한 FLIGHT DATE TIME GATE SEAT WELCOME No. 0123456789'].join(' ');
     await Promise.all([
@@ -357,7 +391,7 @@ async function make() {
       cv.width = im.naturalWidth; cv.height = im.naturalHeight; ctx.drawImage(im, 0, 0);
     } else {
       [cv.width, cv.height] = CONFIG.cardSize;
-      drawPlaceholder(ctx, cv.width, cv.height, hash(to + from));
+      drawPlaceholder(ctx, cv.width, cv.height, hash(to + from), await loadImg(QR_SRC).catch(() => null));
     }
     const S = CONFIG.slots;
     [[S.to, S.to.prefix + to], [S.from, S.from.prefix + from]].forEach(([s, t]) => {
