@@ -22,6 +22,7 @@
   color-scheme:light;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0;background:var(--paper);color:var(--navy);font-family:var(--font);-webkit-text-size-adjust:100%}
 body{padding-bottom:env(safe-area-inset-bottom,0px)}
 button,input{font-family:inherit}
@@ -105,6 +106,14 @@ button,input{font-family:inherit}
 @keyframes board{0%{background:var(--muted)}8%{background:var(--orange)}16%{background:var(--muted)}}
 footer{text-align:center;font-weight:700;font-size:15px;line-height:1.5;margin:22px 0 40px}
 footer #fSite{font-family:var(--mono);font-size:13px;color:#5b6a82}
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(16,34,63,.82);display:flex;align-items:center;justify-content:center;
+  padding:calc(20px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet-in{width:min(100%,440px);background:var(--paper);padding:22px 16px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.ss-t{margin:0;font-size:18px;font-weight:700}.ss-t b{color:var(--orange);font-weight:900}
+.sheet-in img{width:100%;display:block;-webkit-touch-callout:default;user-select:auto;box-shadow:0 2px 10px rgba(16,34,63,.18)}
+.ss-s{margin:0;font-size:13px;color:#5b6a82;word-break:keep-all}
+.sheet .ext{margin-top:0}
+.ss-close{border:0;background:none;font-size:15px;font-weight:700;color:var(--navy);padding:8px 16px;cursor:pointer}
 .toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:#fff;
   font-size:14px;font-weight:700;padding:11px 18px;border-radius:999px;white-space:nowrap;z-index:9}
 @media (prefers-reduced-motion:reduce){.dot,.card-wrap img{animation:none}}
@@ -178,6 +187,15 @@ footer #fSite{font-family:var(--mono);font-size:13px;color:#5b6a82}
 
   <div class="dots" id="dots" aria-hidden="true"></div>
   <footer><div id="fHandle"></div><div id="fSite"></div></footer>
+</div>
+<div class="sheet" id="saveSheet" hidden role="dialog" aria-modal="true" aria-labelledby="ssTitle">
+  <div class="sheet-in">
+    <p class="ss-t" id="ssTitle">이미지를 <b>길게 눌러</b> 저장해 주세요</p>
+    <img id="ssImg" alt="저장할 전도축제 초대장">
+    <p class="ss-s">‘이미지 저장’ 또는 ‘사진에 추가’를 누르면 앨범에 저장돼요.</p>
+    <button class="ext" id="ssExt" type="button">외부 브라우저에서 저장하기</button>
+    <button class="ss-close" id="ssClose" type="button">닫기</button>
+  </div>
 </div>
 <div class="toast" id="toast" hidden></div>
 
@@ -323,17 +341,19 @@ function drawPlaceholder(ctx, W, H, seed, qrIm) {
   txt(ctx, 'PASSENGER  초대받은 친구', 60, 196, { size: 20, font: 'mono', w: 700, color: GREY, ls: 1 });
   txt(ctx, 'INVITED BY  초대한 친구', 60, 410, { size: 20, font: 'mono', w: 700, color: GREY, ls: 1 });
 
-  // ── 오른쪽 열 (x 480–838) : 왼쪽 열과 baseline 정렬 ──
-  const X0 = 480, X1 = 838;
+  // ── 오른쪽 열 (x 450–838) : 왼쪽 열과 baseline 정렬 ──
+  const X0 = 450, X1 = 838;
   const fitW = (t, font, w, max, maxW) => { let z = max; ctx.font = `${w} ${z}px ${font}`; while (ctx.measureText(t).width > maxW && z > 14) { z -= 1; ctx.font = `${w} ${z}px ${font}`; } return z; };
   // 라벨 (PASSENGER 라벨과 같은 y=196)
   txt(ctx, 'FROM', X0, 196, { size: 18, font: 'mono', w: 700, color: GREY, ls: 1.5 });
   txt(ctx, 'TO', X1, 196, { size: 18, font: 'mono', w: 700, color: GREY, align: 'right', ls: 1.5 });
   // 출발지·도착지: 같은 높이로 보이게 공통 크기
-  const rs = Math.min(fitW(E.route.from[0], F_MONO, 700, 40, 150), fitW(E.route.to[0], F_DISPLAY, 400, 40, 150));
-  txt(ctx, E.route.from[0], X0, 252, { size: rs, font: 'mono', w: 700, color: NAVY });
-  txt(ctx, E.route.to[0], X1, 252, { size: rs + 4, font: 'display', color: NAVY, align: 'right' });
-  plane(ctx, (X0 + X1) / 2, 252 - rs * 0.36, 30, OR);
+  const fs = fitW(E.route.from[0], F_MONO, 700, 34, 196), ts = fitW(E.route.to[0], F_DISPLAY, 400, 36, 146);
+  txt(ctx, E.route.from[0], X0, 254, { size: fs, font: 'mono', w: 700, color: NAVY });
+  ctx.font = `700 ${fs}px ${F_MONO}`; const fw = ctx.measureText(E.route.from[0]).width;
+  ctx.font = `400 ${ts}px ${F_DISPLAY}`; const tw = ctx.measureText(E.route.to[0]).width;
+  txt(ctx, E.route.to[0], X1, 254, { size: ts, font: 'display', color: NAVY, align: 'right' });
+  plane(ctx, (X0 + fw + X1 - tw) / 2, 254 - fs * 0.36, 26, OR);
   txt(ctx, E.route.from[1], X0, 284, { size: 16, w: 700, color: GREY });
   txt(ctx, E.route.to[1], X1, 284, { size: 16, w: 700, color: GREY, align: 'right' });
   // 구분선
@@ -348,7 +368,10 @@ function drawPlaceholder(ctx, W, H, seed, qrIm) {
 
   // 하단 행사명
   ctx.fillStyle = '#e8eef8'; ctx.fillRect(0, H - 70, STUB, 70);
-  txt(ctx, E.band, 60, H - 26, { size: 23, w: 900, color: NAVY });
+  const [bTitle, ...bRest] = E.band.split(' · ');
+  txt(ctx, bTitle, 60, H - 26, { size: 23, w: 900, color: OR });
+  ctx.font = `900 23px ${F_BODY}`; const btw = ctx.measureText(bTitle).width;
+  if (bRest.length) txt(ctx, ' · ' + bRest.join(' · '), 60 + btw, H - 26, { size: 23, w: 900, color: NAVY });
 
   // 절취선 + 노치
   ctx.save(); ctx.globalCompositeOperation = 'destination-out';
@@ -397,13 +420,13 @@ async function make() {
     }
     const S = CONFIG.slots;
     [[S.to, S.to.prefix + to], [S.from, S.from.prefix + from]].forEach(([s, t]) => {
-      const size = fitText(ctx, s, t, 420);
+      const size = fitText(ctx, s, t, 370);
       txt(ctx, t, s.x, s.y, { size, w: 900, font: s.font, color: s.fill, align: s.align });
     });
     cardBlob = await new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('blob')), 'image/png'));
     if (cardURL) URL.revokeObjectURL(cardURL);
     cardURL = URL.createObjectURL(cardBlob); toName = to;
-    $('cardImg').src = cardURL;
+    $('cardImg').src = cardURL; delete $('ssImg').dataset.ok;
     $('formScreen').hidden = true; $('resultScreen').hidden = false;
     requestAnimationFrame(() => $('resultScreen').scrollIntoView({ behavior: 'smooth', block: 'center' }));
   } catch (err) {
@@ -416,12 +439,8 @@ let dl = null;
 if (window.claude && window.claude.use) window.claude.use('downloads').then(ns => { dl = ns; }).catch(() => {});
 $('saveBtn').addEventListener('click', async () => {
   if (!cardBlob) return;
-  // 안드로이드 인앱브라우저(카톡 등)는 파일 저장을 막음 → 이름을 넘겨 외부 브라우저로 이동
-  if (IN_APP && IS_ANDROID && !dl) {
-    toast('외부 브라우저로 이동해요. 열리면 저장하기를 다시 눌러주세요.');
-    setTimeout(() => openExternal(extUrl()), 800);
-    return;
-  }
+  // 안드로이드 인앱브라우저(카톡 등)는 파일 저장을 막음 → 길게 눌러 저장 / 외부 브라우저 선택
+  if (IN_APP && IS_ANDROID && !dl) { openSheet(); return; }
   const btn = $('saveBtn'); if (btn.getAttribute('aria-busy') === 'true') return;
   btn.setAttribute('aria-busy', 'true'); $('saveTxt').textContent = '저장 중...';
   const name = CONFIG.fileName(toName);
@@ -434,14 +453,28 @@ $('saveBtn').addEventListener('click', async () => {
     const file = new File([cardBlob], name, { type: 'image/png' });
     // 아이폰: 공유창(사진 저장) / 안드로이드: 바로 다운로드(갤러리에 표시)
     if (!IS_ANDROID && navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
+    else if (IN_APP) openSheet();
     else {
       const a = document.createElement('a'); a.href = cardURL; a.download = name;
       document.body.appendChild(a); a.click(); a.remove();
-      if (IN_APP) toast('저장이 안 되면 이미지를 길게 눌러 저장해 주세요.');
+      toast(IS_ANDROID ? '저장했어요. 갤러리 ‘다운로드’ 앨범에서 확인하세요.' : '저장했어요.');
     }
-  } catch (e) { if (e && e.name !== 'AbortError') toast('이미지를 길게 눌러 저장해 주세요.'); }
+  } catch (e) { if (e && e.name !== 'AbortError') openSheet(); }
   finally { setTimeout(() => { btn.removeAttribute('aria-busy'); $('saveTxt').textContent = '저장하기'; }, 600); }
 });
+
+/* ── 길게 눌러 저장 시트 (모든 저장 실패 시 최종 수단) ── */
+async function openSheet() {
+  const img = $('ssImg');
+  if (!img.dataset.ok) {
+    img.src = await new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(cardBlob); });
+    img.dataset.ok = '1';
+  }
+  $('ssExt').hidden = !IN_APP;
+  $('saveSheet').hidden = false;
+}
+$('ssClose').addEventListener('click', () => { $('saveSheet').hidden = true; });
+$('ssExt').addEventListener('click', () => openExternal(extUrl()));
 
 /* ── 다시하기 ── */
 $('retryBtn').addEventListener('click', () => {
