@@ -42,11 +42,11 @@ button,input{font-family:inherit}
 .t-top{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.12em}
 .t-top .bp{background:var(--navy);color:#fff;padding:3px 7px;border-radius:4px}
 .t-route{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
-.t-route b{font-family:var(--mono);font-size:clamp(13px,4vw,20px);font-weight:700;letter-spacing:-.01em;line-height:1.1}
-.t-route .r b{font-family:var(--display);font-weight:400;font-size:clamp(18px,5.4vw,26px);letter-spacing:0}
-.t-route small{display:block;font-size:10.5px;font-weight:700;color:#5b6a82;margin-top:4px}
+.t-route{gap:8px}
+.t-route b{font-family:var(--display);font-weight:400;font-size:clamp(14px,4.2vw,20px);letter-spacing:0;line-height:1.1;white-space:nowrap}
+.t-route small{display:block;white-space:nowrap;font-size:10px;font-weight:700;color:#5b6a82;margin-top:4px}
 .t-route .r{text-align:right}
-.t-route svg{width:24px;height:24px;fill:var(--orange);flex:none}
+.t-route svg{width:20px;height:20px;fill:var(--orange);flex:none}
 .t-title{font-family:var(--display);font-size:clamp(24px,7.4vw,34px);word-break:keep-all;line-height:1.12;margin:16px 0 0;letter-spacing:-.01em;text-wrap:balance}
 .t-title em{font-style:normal;color:var(--orange)}
 .t-legs{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:5px;font-size:13px;font-weight:700;line-height:1.35}
@@ -348,12 +348,12 @@ function drawPlaceholder(ctx, W, H, seed, qrIm) {
   txt(ctx, 'FROM', X0, 196, { size: 18, font: 'mono', w: 700, color: GREY, ls: 1.5 });
   txt(ctx, 'TO', X1, 196, { size: 18, font: 'mono', w: 700, color: GREY, align: 'right', ls: 1.5 });
   // 출발지·도착지: 같은 높이로 보이게 공통 크기
-  const fs = fitW(E.route.from[0], F_MONO, 700, 34, 196), ts = fitW(E.route.to[0], F_DISPLAY, 400, 36, 146);
-  txt(ctx, E.route.from[0], X0, 254, { size: fs, font: 'mono', w: 700, color: NAVY });
-  ctx.font = `700 ${fs}px ${F_MONO}`; const fw = ctx.measureText(E.route.from[0]).width;
-  ctx.font = `400 ${ts}px ${F_DISPLAY}`; const tw = ctx.measureText(E.route.to[0]).width;
-  txt(ctx, E.route.to[0], X1, 254, { size: ts, font: 'display', color: NAVY, align: 'right' });
-  plane(ctx, (X0 + fw + X1 - tw) / 2, 254 - fs * 0.36, 26, OR);
+  // 출발지·도착지: 같은 글꼴(Black Han Sans)·같은 크기, 비행기 자리(60px) 빼고 폭에 맞춤
+  let rs = 36, fw, tw;
+  for (;;) { ctx.font = `400 ${rs}px ${F_DISPLAY}`; fw = ctx.measureText(E.route.from[0]).width; tw = ctx.measureText(E.route.to[0]).width; if (fw + tw + 60 <= X1 - X0 || rs <= 16) break; rs -= 1; }
+  txt(ctx, E.route.from[0], X0, 254, { size: rs, font: 'display', color: NAVY });
+  txt(ctx, E.route.to[0], X1, 254, { size: rs, font: 'display', color: NAVY, align: 'right' });
+  plane(ctx, (X0 + fw + X1 - tw) / 2, 254 - rs * 0.36, 26, OR);
   txt(ctx, E.route.from[1], X0, 284, { size: 16, w: 700, color: GREY });
   txt(ctx, E.route.to[1], X1, 284, { size: 16, w: 700, color: GREY, align: 'right' });
   // 구분선
