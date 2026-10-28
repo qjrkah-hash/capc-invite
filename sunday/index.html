@@ -215,7 +215,7 @@ const CONFIG = {
     ],
     stubDate: '10.31 - 11.01',
     heroStub: [['DATE', '10.31<br>11.01'], ['DAYS', '토<br>주일']],
-    band: 'LIVING HOPE 전도축제 · 찬양 브라이언 킴, 체험부스, 푸드코트',
+    band: 'LIVING HOPE 전도축제 · 찬양 브라이언 킴, 복음김밥 공연(영유아), 체험부스, 푸드코트',
   },
   footer: { handle: '천안장로교회 주일학교', site: '' },
 
@@ -369,9 +369,11 @@ function drawPlaceholder(ctx, W, H, seed, qrIm) {
   // 하단 행사명
   ctx.fillStyle = '#e8eef8'; ctx.fillRect(0, H - 70, STUB, 70);
   const [bTitle, ...bRest] = E.band.split(' · ');
-  txt(ctx, bTitle, 60, H - 26, { size: 23, w: 900, color: OR });
-  ctx.font = `900 23px ${F_BODY}`; const btw = ctx.measureText(bTitle).width;
-  if (bRest.length) txt(ctx, ' · ' + bRest.join(' · '), 60 + btw, H - 26, { size: 23, w: 900, color: NAVY });
+  const bRestTxt = bRest.length ? ' · ' + bRest.join(' · ') : '';
+  let bs = 23; for (;;) { ctx.font = `900 ${bs}px ${F_BODY}`; if (ctx.measureText(bTitle + bRestTxt).width <= STUB - 90 || bs <= 15) break; bs -= 0.5; }
+  txt(ctx, bTitle, 60, H - 26, { size: bs, w: 900, color: OR });
+  ctx.font = `900 ${bs}px ${F_BODY}`; const btw = ctx.measureText(bTitle).width;
+  if (bRestTxt) txt(ctx, bRestTxt, 60 + btw, H - 26, { size: bs, w: 900, color: NAVY });
 
   // 절취선 + 노치
   ctx.save(); ctx.globalCompositeOperation = 'destination-out';
