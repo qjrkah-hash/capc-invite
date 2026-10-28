@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>전도축제 초대장 · 주일학교</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Mono:wght@500;700&family=Noto+Sans+KR:wght@500;700;900&display=swap">
+<style>
+/* Layout: 모바일 1열(최대 480px) · 상단 탑승권 히어로 → 입력/결과 → 탑승 진행 도트 → 푸터 */
+:root{
+  --navy:#10223f;
+  --paper:#ffffff;
+  --sky:#e8eef8;
+  --orange:#ff5a1f;
+  --orange-soft:#ffc2ab;
+  --muted:#b3bccb;
+  --display:"Black Han Sans","Noto Sans KR",sans-serif;
+  --font:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--paper);color:var(--navy);font-family:var(--font);-webkit-text-size-adjust:100%}
+body{padding-bottom:env(safe-area-inset-bottom,0px)}
+button,input{font-family:inherit}
+.page{max-width:480px;margin:0 auto;overflow:hidden}
+
+/* ── HERO (탑승권) ── */
+.hero{background:var(--sky);padding:34px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px));position:relative}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:14px;
+  background:radial-gradient(circle at 10px 14px,var(--paper) 7px,transparent 7.5px) 0 0/20px 14px repeat-x}
+.ticket{position:relative;display:grid;grid-template-columns:1fr 92px;background:var(--paper);border-radius:14px;
+  box-shadow:0 10px 28px rgba(16,34,63,.16);transform:rotate(-2.5deg);
+  -webkit-mask:radial-gradient(circle at calc(100% - 92px) 0,transparent 11px,#000 11.5px) top/100% 51% no-repeat,
+               radial-gradient(circle at calc(100% - 92px) 100%,transparent 11px,#000 11.5px) bottom/100% 51% no-repeat;
+          mask:radial-gradient(circle at calc(100% - 92px) 0,transparent 11px,#000 11.5px) top/100% 51% no-repeat,
+               radial-gradient(circle at calc(100% - 92px) 100%,transparent 11px,#000 11.5px) bottom/100% 51% no-repeat}
+.t-main{padding:16px 16px 18px;min-width:0}
+.t-top{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.12em}
+.t-top .bp{background:var(--navy);color:#fff;padding:3px 7px;border-radius:4px}
+.t-route{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+.t-route{gap:8px}
+.t-route b{font-family:var(--display);font-weight:400;font-size:clamp(13px,3.9vw,19px);letter-spacing:0;line-height:1.1;white-space:nowrap}
+.t-route small{display:block;white-space:nowrap;font-size:9.5px;letter-spacing:-.03em;font-weight:700;color:#5b6a82;margin-top:4px}
+.t-route .r{text-align:right}
+.t-route svg{width:20px;height:20px;fill:var(--orange);flex:none}
+.t-title{font-family:var(--display);font-size:clamp(24px,7.4vw,34px);word-break:keep-all;line-height:1.12;margin:16px 0 0;letter-spacing:-.01em;text-wrap:balance}
+.t-title em{font-style:normal;color:var(--orange)}
+.t-legs{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:5px;font-size:13px;font-weight:700;line-height:1.35}
+.t-legs b{font-family:var(--mono);color:var(--orange);font-size:11px;letter-spacing:.06em;margin-right:6px}
+.t-legs small{display:block;font-size:11px;font-weight:500;color:#5b6a82;padding-left:48px}
+.t-tag{display:inline-flex;gap:.3em;margin-top:12px;font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.04em}
+.t-tag span{color:var(--orange)}
+.t-stub{border-left:2px dashed var(--muted);padding:16px 10px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;text-align:center}
+.t-stub .k{font-family:var(--mono);font-size:9.5px;font-weight:700;color:#5b6a82;letter-spacing:.1em}
+.t-stub .v{font-family:var(--display);font-size:20px;line-height:1.1}
+.barcode{width:56px;height:46px;background:repeating-linear-gradient(90deg,var(--navy) 0 2px,transparent 2px 4px,var(--navy) 4px 5px,transparent 5px 8px,var(--navy) 8px 11px,transparent 11px 12px)}
+
+/* ── FORM ── */
+.screen{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.form{display:flex;flex-direction:column;gap:34px;width:min(100%,310px);margin:30px auto 0}
+.field label{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:6px}
+.field label span{font-family:var(--mono);color:#7d8aa0;letter-spacing:.08em;font-size:10.5px}
+.row{display:flex;align-items:baseline;gap:8px;border-bottom:3px solid var(--navy);padding-bottom:6px}
+.row b{font-size:21px;font-weight:900;flex:none}
+.row input{flex:1;min-width:0;border:0;outline:0;background:transparent;font-size:20px;font-weight:900;color:var(--navy);padding:0}
+.row input::placeholder{color:var(--muted);font-size:15px;font-weight:700}
+.row:focus-within{border-color:var(--orange)}
+
+.make{display:flex;align-items:center;justify-content:center;gap:10px;margin:44px auto 0;border:0;background:none;
+  font-size:24px;font-weight:900;color:var(--muted);cursor:pointer;padding:8px 12px;transition:color .2s}
+.make svg{width:30px;height:30px;fill:var(--orange-soft);transition:fill .2s,transform .3s}
+.make.on{color:var(--navy)}
+.make.on svg{fill:var(--orange)}
+.make.on:hover svg{transform:translateX(4px) rotate(-8deg)}
+.make:disabled{cursor:default}
+.make:focus-visible,.act:focus-visible,.ext:focus-visible{outline:2px solid var(--orange);outline-offset:3px;border-radius:6px}
+
+/* ── RESULT ── */
+.result{display:flex;flex-direction:column;align-items:center;margin-top:22px}
+.card-wrap{width:min(100%,400px);padding:18px 6px}
+.card-wrap img{display:block;width:100%;transform:rotate(-4deg);filter:drop-shadow(0 4px 12px rgba(16,34,63,.28));
+  animation:drop .55s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes drop{from{opacity:0;transform:rotate(-10deg) translate(-30px,14px) scale(.94)}to{opacity:1;transform:rotate(-4deg)}}
+.acts{display:flex;justify-content:space-between;width:min(100%,340px);margin-top:30px}
+.act{display:flex;align-items:center;gap:8px;border:0;background:none;font-size:25px;font-weight:900;color:var(--navy);cursor:pointer;padding:6px}
+.act svg{width:28px;height:28px;stroke:var(--orange);fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.act[aria-busy="true"]{color:var(--muted)}
+.act[aria-busy="true"] svg{stroke:var(--orange-soft)}
+.signup{width:100%;margin-top:34px;border:2px solid var(--navy);padding:20px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.signup a{display:block;line-height:0}
+.signup img{width:150px;height:150px;image-rendering:pixelated}
+.signup a:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+.signup b{margin-top:6px;font-size:18px;font-weight:900}
+.signup p{margin:0;font-size:13.5px;font-weight:500;line-height:1.5;letter-spacing:-.02em;word-break:keep-all}
+.signup .due{font-size:12.5px;font-weight:700;color:var(--orange)}
+.notice{width:100%;margin-top:30px;background:var(--sky);padding:20px 16px;text-align:center;font-size:13.5px;font-weight:500;line-height:1.7;letter-spacing:-.02em}
+.ext{margin-top:14px;border:0;background:var(--navy);color:#fff;font-size:14px;font-weight:700;padding:11px 20px;cursor:pointer}
+
+/* ── DOTS (탑승 진행) / FOOTER ── */
+.dots{display:flex;justify-content:center;gap:8px;margin:38px 0 0}
+.dot{width:18px;height:18px;border-radius:50%;background:var(--muted);animation:board 2.6s steps(1) infinite}
+@keyframes board{0%{background:var(--muted)}8%{background:var(--orange)}16%{background:var(--muted)}}
+footer{text-align:center;font-weight:700;font-size:15px;line-height:1.5;margin:22px 0 40px}
+footer #fSite{font-family:var(--mono);font-size:13px;color:#5b6a82}
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(16,34,63,.82);display:flex;align-items:center;justify-content:center;
+  padding:calc(20px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet-in{width:min(100%,440px);background:var(--paper);padding:22px 16px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.ss-t{margin:0;font-size:18px;font-weight:700}.ss-t b{color:var(--orange);font-weight:900}
+.sheet-in img{width:100%;display:block;-webkit-touch-callout:default;user-select:auto;box-shadow:0 2px 10px rgba(16,34,63,.18)}
+.ss-s{margin:0;font-size:13px;color:#5b6a82;word-break:keep-all}
+.sheet .ext{margin-top:0}
+.ss-close{border:0;background:none;font-size:15px;font-weight:700;color:var(--navy);padding:8px 16px;cursor:pointer}
+.toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:#fff;
+  font-size:14px;font-weight:700;padding:11px 18px;border-radius:999px;white-space:nowrap;z-index:9}
+@media (prefers-reduced-motion:reduce){.dot,.card-wrap img{animation:none}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <div class="ticket">
+      <div class="t-main">
+        <div class="t-top"><span class="bp">BOARDING PASS</span><span id="hFlight"></span></div>
+        <div class="t-route">
+          <div><b id="hFromCode"></b><small id="hFromName"></small></div>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" transform="rotate(90 12 12)"/></svg>
+          <div class="r"><b id="hToCode"></b><small id="hToName"></small></div>
+        </div>
+        <h1 class="t-title" id="hTitle"></h1>
+        <ul class="t-legs" id="hLegs"></ul>
+        <div class="t-tag"><span>[</span>Invitation Ticket<span>]</span></div>
+      </div>
+      <div class="t-stub">
+        <div><div class="k" id="hK1"></div><div class="v" id="hDate"></div></div>
+        <div><div class="k" id="hK2"></div><div class="v" id="hGate"></div></div>
+        <div class="barcode" aria-hidden="true"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 1) 입력 화면 -->
+  <section class="screen" id="formScreen">
+    <form class="form" id="form" autocomplete="off" novalidate>
+      <div class="field">
+        <label for="toInput">초대받는 친구 <span>PASSENGER</span></label>
+        <div class="row"><b>To.</b><input id="toInput" maxlength="8" placeholder="(입력하세요)" enterkeyhint="next"></div>
+      </div>
+      <div class="field">
+        <label for="fromInput">초대하는 나 <span>INVITED BY</span></label>
+        <div class="row"><b>From.</b><input id="fromInput" maxlength="8" placeholder="(입력하세요)" enterkeyhint="done"></div>
+      </div>
+    </form>
+    <button class="make" id="makeBtn" type="button" disabled>
+      초대장 만들기
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" transform="rotate(90 12 12)"/></svg>
+    </button>
+  </section>
+
+  <!-- 2) 결과 화면 -->
+  <section class="screen" id="resultScreen" hidden>
+    <div class="result">
+      <div class="card-wrap"><img id="cardImg" alt="완성된 전도축제 초대장"></div>
+      <div class="acts">
+        <button class="act" id="saveBtn" type="button"><span id="saveTxt">저장하기</span>
+          <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 3v22M3 14h22"/></svg></button>
+        <button class="act" id="retryBtn" type="button">다시하기
+          <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M5 12a9 9 0 0 1 16-4l2 2M23 4v6h-6M23 16a9 9 0 0 1-16 4l-2-2M5 24v-6h6"/></svg></button>
+      </div>
+      <div class="signup">
+        <a id="suBtn" target="_blank" rel="noopener" aria-label="와우축제 사전접수 페이지 열기"><img id="qrImg" alt="와우축제 사전접수 QR 코드"></a>
+        <b id="suTitle"></b>
+        <p id="suDesc"></p>
+        <p class="due" id="suDue"></p>
+      </div>
+      <div class="notice" id="notice">
+        앱 안에서 열린 브라우저에서는 저장이 잘 안 될 수 있어요.<br>
+        메뉴(···)에서 ‘다른 브라우저로 열기’를 선택해 주세요.<br>
+        <button class="ext" id="extBtn" type="button">외부 브라우저로 열기</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="dots" id="dots" aria-hidden="true"></div>
+  <footer><div id="fHandle"></div><div id="fSite"></div></footer>
+</div>
+<div class="sheet" id="saveSheet" hidden role="dialog" aria-modal="true" aria-labelledby="ssTitle">
+  <div class="sheet-in">
+    <p class="ss-t" id="ssTitle">이미지를 <b>길게 눌러</b> 저장해 주세요</p>
+    <img id="ssImg" alt="저장할 전도축제 초대장">
+    <p class="ss-s">‘이미지 저장’ 또는 ‘사진에 추가’를 누르면 앨범에 저장돼요.</p>
+    <button class="ext" id="ssExt" type="button">외부 브라우저에서 저장하기</button>
+    <button class="ss-close" id="ssClose" type="button">닫기</button>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* =====================================================================
+   CONFIG — 여기만 수정하면 됩니다
+   ===================================================================== */
+const CONFIG = {
+  event: {
+    church: '천안장로교회',
+    title: ['천안장로교회 주일학교', '<em>LIVING HOPE</em> 전도축제'],   // 히어로 제목 (<em>은 주황 강조)
+    flight: 'LH 1031',               // 편명 느낌의 코드
+    route: { from: ['EVERYWHERE', '어디서든 출발'], to: ['천장주일학교', '천안장로교회 주일학교'] },
+    legs: [
+      { tag: 'DAY 1', when: '10.31 (토) 오후 2–5시', where: '본당 · 비전센터 · 주차장' },
+    ],
+    stubDate: '10.31 (토)',
+    heroStub: [['DATE', '10.31<br>토요일'], ['TIME', '오후<br>2–5시']],
+    band: 'LIVING HOPE 전도축제 · 찬양 브라이언 킴, 체험부스, 푸드코트',
+  },
+  footer: { handle: '천안장로교회 주일학교', site: '' },
+
+  // 전도축제 사전접수 (QR 원본 링크)
+  signup: {
+    url: 'https://m.site.naver.com/2iYtX',
+    title: '와우축제 사전접수',
+    desc: 'QR을 찍어 인적사항을 미리 등록해 주세요.',
+    cardDesc: 'QR 찍고 미리 등록하기',
+    cardDue: '~10.30(금) 오후 6시',
+    due: '사전접수 10.30(금) 오후 6시까지 · 이후에는 당일 현장 접수',
+  },
+
+  // 초대장 이미지 (같은 폴더 파일명 또는 URL). 비워두면 임시 탑승권을 그려서 사용
+  cardImage: '',            // 예: 'card.png'
+  cardSize: [1200, 600],
+
+  // 이름 위치 — 이미지 픽셀 기준. 이미지에 라벨이 이미 있으면 prefix ''
+  slots: {
+    to:   { x: 60,  y: 318, size: 78, align: 'left', prefix: '', fill: '#10223f', font: 'display' },
+    from: { x: 60,  y: 470, size: 40, align: 'left', prefix: '', fill: '#ff5a1f', font: 'display' },
+  },
+
+  fileName: name => `전도축제 초대장_${name}.png`,
+  noticeMode: 'always',     // 'always' 항상 표시 / 'inapp' 카톡·인스타 등 인앱브라우저에서만
+};
+/* ===================================================================== */
+
+const $ = id => document.getElementById(id);
+const F_DISPLAY = '"Black Han Sans","Noto Sans KR",sans-serif';
+const F_BODY = '"Noto Sans KR","Apple SD Gothic Neo",sans-serif';
+const F_MONO = '"IBM Plex Mono",monospace';
+const E = CONFIG.event;
+let cardBlob = null, cardURL = null, toName = '';
+
+/* ── 정적 텍스트 ── */
+$('hFlight').textContent = E.flight;
+$('hFromCode').textContent = E.route.from[0]; $('hFromName').textContent = E.route.from[1];
+$('hToCode').textContent = E.route.to[0];     $('hToName').textContent = E.route.to[1];
+$('hTitle').innerHTML = E.title.join('<br>');
+$('hK1').textContent = E.heroStub[0][0]; $('hDate').innerHTML = E.heroStub[0][1];
+$('hK2').textContent = E.heroStub[1][0]; $('hGate').innerHTML = E.heroStub[1][1];
+E.legs.forEach(l => {
+  const li = document.createElement('li');
+  const b = document.createElement('b'); b.textContent = l.tag;
+  const s = document.createElement('small'); s.textContent = l.where;
+  li.append(b, document.createTextNode(l.when), s);
+  $('hLegs').appendChild(li);
+});
+$('fHandle').textContent = CONFIG.footer.handle;
+$('fSite').textContent = CONFIG.footer.site;
+const QR_SRC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUoAAAFKAQMAAABB54RGAAAABlBMVEUQIj////+1RgnVAAABpUlEQVR42u2bQY7DMAhFUXsAHylXz5FyAEseB/wx7WxaaUb6i8/Cqh1WeQI+OLXxqZ0mV7nK9SvXy5Yd11rm2XP4gkdzez7sY5Pr/7iCzDQ7nF/r8/RejpuWn7mLaLHQ8uiZZPpvghFvokVIy2NrBLeZJZ+iRUzLodxnkQ5Fi7puXWabm4ea6hYdra0JE1Qu0oRktN4MidHrVhX7elkUtDp+t6TVbpXRBpApE1KpDO+JXQ4aVIbrjVLaRIsmE261bm2kwOhlK1o0tFZERaHqCKYYaBhyol4WVd3aPXE+QHZUJiSiFT3xjrK32FLd4uqOz+y39lRjqUMpeEpaUZ6q6IBYFC2uuuX6L/FERKXoWFu9LJp+KxVFSg2MdiEWRYusbsXkKadRiVGZkItWWsmJrjdiBqXYosuEuN/fnRdM91tck6cyfm8v9/ueGBVbRLFVQwj5b7x0XqpbdHVr0Wr5yxRbnHUrv8GIy5J68a+6xUsrpIaVmy5Nnlhp1c/UoAkxLBQtvm+eMMbI7vjCVrTINGHOMuKypAw0RIuv39JfPOQq1z9z/QGL6hYnQBjjbwAAAABJRU5ErkJggg==';
+$('qrImg').src = QR_SRC;
+$('suTitle').textContent = CONFIG.signup.title;
+$('suDesc').textContent = CONFIG.signup.desc;
+$('suDue').textContent = CONFIG.signup.due;
+$('suBtn').href = CONFIG.signup.url;
+for (let i = 0; i < 13; i++) {
+  const d = document.createElement('span');
+  d.className = 'dot'; d.style.animationDelay = `${i * 0.2}s`;
+  $('dots').appendChild(d);
+}
+
+/* ── 인앱브라우저 ── */
+const UA = navigator.userAgent;
+const IN_APP = /KAKAOTALK|Instagram|FBAN|FBAV|Line\/|NAVER|DaumApps|everytimeApp|band/i.test(UA);
+const IS_ANDROID = /Android/i.test(UA);
+if (CONFIG.noticeMode === 'inapp' && !IN_APP) $('notice').hidden = true;
+
+/* ── 입력 ── */
+const toI = $('toInput'), fromI = $('fromInput'), makeBtn = $('makeBtn');
+function sync() {
+  const ok = toI.value.trim() && fromI.value.trim();
+  makeBtn.disabled = !ok; makeBtn.classList.toggle('on', !!ok);
+}
+toI.addEventListener('input', sync); fromI.addEventListener('input', sync);
+toI.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); fromI.focus(); } });
+fromI.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); fromI.blur(); if (!makeBtn.disabled) make(); } });
+$('form').addEventListener('submit', e => e.preventDefault());
+makeBtn.addEventListener('click', make);
+
+/* ── 그리기 유틸 ── */
+function loadImg(src) {
+  return new Promise((res, rej) => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => res(im); im.onerror = rej; im.src = src; });
+}
+function fontOf(k) { return k === 'display' ? F_DISPLAY : k === 'mono' ? F_MONO : F_BODY; }
+function txt(ctx, t, x, y, { size = 24, w = 700, font = 'body', color = '#10223f', align = 'left', ls = 0 } = {}) {
+  ctx.font = `${font === 'display' ? 400 : w} ${size}px ${fontOf(font)}`;
+  ctx.textAlign = align; ctx.fillStyle = color; ctx.textBaseline = 'alphabetic';
+  if ('letterSpacing' in ctx) ctx.letterSpacing = `${ls}px`;
+  ctx.fillText(t, x, y);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+}
+function fitText(ctx, s, text, maxW) {
+  let size = s.size;
+  ctx.font = `${s.font === 'display' ? 400 : 900} ${size}px ${fontOf(s.font)}`;
+  while (ctx.measureText(text).width > maxW && size > 20) { size -= 2; ctx.font = `${s.font === 'display' ? 400 : 900} ${size}px ${fontOf(s.font)}`; }
+  return size;
+}
+function plane(ctx, x, y, s, color) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI / 2); ctx.scale(s / 24, s / 24); ctx.translate(-12, -12);
+  ctx.fillStyle = color;
+  ctx.fill(new Path2D('M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z'));
+  ctx.restore();
+}
+function hash(str) { let h = 2166136261; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+function drawPlaceholder(ctx, W, H, seed, qrIm) {
+  const NAVY = '#10223f', OR = '#ff5a1f', GREY = '#6b7890', STUB = 860;
+  // 바탕 + 둥근 모서리
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.roundRect(0, 0, W, H, 28); ctx.fill();
+  // 상단 밴드
+  ctx.save(); ctx.beginPath(); ctx.roundRect(0, 0, W, H, 28); ctx.clip();
+  ctx.fillStyle = NAVY; ctx.fillRect(0, 0, W, 104);
+  ctx.fillStyle = OR; ctx.fillRect(STUB, 0, W - STUB, 104);
+  ctx.restore();
+  txt(ctx, 'BOARDING PASS', 60, 68, { size: 40, font: 'display', color: '#fff', ls: 2 });
+  txt(ctx, `${E.church} 주일학교`, STUB - 40, 64, { size: 24, w: 700, color: '#c9d4e8', align: 'right' });
+  txt(ctx, '전도축제 초대장', W - 170, 66, { size: 34, font: 'display', color: '#fff', align: 'center' });
+
+  // 라벨
+  txt(ctx, 'PASSENGER  초대받은 친구', 60, 196, { size: 20, font: 'mono', w: 700, color: GREY, ls: 1 });
+  txt(ctx, 'INVITED BY  초대한 친구', 60, 410, { size: 20, font: 'mono', w: 700, color: GREY, ls: 1 });
+
+  // ── 오른쪽 열 (x 450–838) : 왼쪽 열과 baseline 정렬 ──
+  const X0 = 450, X1 = 838;
+  const fitW = (t, font, w, max, maxW) => { let z = max; ctx.font = `${w} ${z}px ${font}`; while (ctx.measureText(t).width > maxW && z > 14) { z -= 1; ctx.font = `${w} ${z}px ${font}`; } return z; };
+  // 라벨 (PASSENGER 라벨과 같은 y=196)
+  txt(ctx, 'FROM', X0, 196, { size: 18, font: 'mono', w: 700, color: GREY, ls: 1.5 });
+  txt(ctx, 'TO', X1, 196, { size: 18, font: 'mono', w: 700, color: GREY, align: 'right', ls: 1.5 });
+  // 출발지·도착지: 같은 높이로 보이게 공통 크기
+  // 출발지·도착지: 같은 글꼴(Black Han Sans)·같은 크기, 비행기 자리(60px) 빼고 폭에 맞춤
+  let rs = 36, fw, tw;
+  for (;;) { ctx.font = `400 ${rs}px ${F_DISPLAY}`; fw = ctx.measureText(E.route.from[0]).width; tw = ctx.measureText(E.route.to[0]).width; if (fw + tw + 60 <= X1 - X0 || rs <= 16) break; rs -= 1; }
+  txt(ctx, E.route.from[0], X0, 254, { size: rs, font: 'display', color: NAVY });
+  txt(ctx, E.route.to[0], X1, 254, { size: rs, font: 'display', color: NAVY, align: 'right' });
+  plane(ctx, (X0 + fw + X1 - tw) / 2, 254 - rs * 0.36, 26, OR);
+  txt(ctx, E.route.from[1], X0, 284, { size: 16, w: 700, color: GREY });
+  txt(ctx, E.route.to[1], X1, 284, { size: 16, w: 700, color: GREY, align: 'right' });
+  // 구분선
+  ctx.fillStyle = '#e3e8f0'; ctx.fillRect(X0, 314, X1 - X0, 2);
+  // 일정: 태그 | 일시(굵게) / 장소(회색) — 2번째 줄이 From 이름(y=470)과 정렬
+  E.legs.forEach((l, i) => {
+    const y = E.legs.length === 1 ? 410 : 364 + i * 86;
+    txt(ctx, l.tag, X0, y, { size: 16, font: 'mono', w: 700, color: OR, ls: 1 });
+    txt(ctx, l.when, X0 + 76, y, { size: fitW(l.when, F_BODY, 900, 24, X1 - X0 - 76), w: 900, color: NAVY });
+    txt(ctx, l.where, X0 + 76, y + 30, { size: 16, w: 700, color: GREY });
+  });
+
+  // 하단 행사명
+  ctx.fillStyle = '#e8eef8'; ctx.fillRect(0, H - 70, STUB, 70);
+  const [bTitle, ...bRest] = E.band.split(' · ');
+  txt(ctx, bTitle, 60, H - 26, { size: 23, w: 900, color: OR });
+  ctx.font = `900 23px ${F_BODY}`; const btw = ctx.measureText(bTitle).width;
+  if (bRest.length) txt(ctx, ' · ' + bRest.join(' · '), 60 + btw, H - 26, { size: 23, w: 900, color: NAVY });
+
+  // 절취선 + 노치
+  ctx.save(); ctx.globalCompositeOperation = 'destination-out';
+  [0, H].forEach(y => { ctx.beginPath(); ctx.arc(STUB, y, 26, 0, Math.PI * 2); ctx.fill(); });
+  ctx.restore();
+  ctx.strokeStyle = '#b3bccb'; ctx.lineWidth = 4; ctx.setLineDash([14, 12]);
+  ctx.beginPath(); ctx.moveTo(STUB, 40); ctx.lineTo(STUB, H - 40); ctx.stroke(); ctx.setLineDash([]);
+
+  // 스텁
+  const sx = STUB + (W - STUB) / 2;
+  txt(ctx, 'FLIGHT', sx, 170, { size: 17, font: 'mono', w: 700, color: GREY, align: 'center', ls: 1.5 });
+  txt(ctx, E.flight, sx, 210, { size: 32, font: 'mono', w: 700, color: NAVY, align: 'center' });
+  txt(ctx, 'DATE', sx, 268, { size: 17, font: 'mono', w: 700, color: GREY, align: 'center', ls: 1.5 });
+  txt(ctx, E.stubDate, sx, 312, { size: 32, font: 'display', color: NAVY, align: 'center' });
+  // 사전접수 QR + 설명
+  const qs = 150; ctx.imageSmoothingEnabled = false;
+  if (qrIm) ctx.drawImage(qrIm, sx - qs / 2, 334, qs, qs);
+  ctx.imageSmoothingEnabled = true;
+  txt(ctx, CONFIG.signup.title, sx, 512, { size: 21, w: 900, color: NAVY, align: 'center' });
+  txt(ctx, CONFIG.signup.cardDesc, sx, 538, { size: 15, w: 700, color: GREY, align: 'center' });
+  txt(ctx, CONFIG.signup.cardDue, sx, 562, { size: 15, w: 700, color: OR, align: 'center' });
+
+}
+
+async function make() {
+  const to = toI.value.trim(), from = fromI.value.trim();
+  if (!to || !from) return;
+  makeBtn.disabled = true;
+  try {
+    // 웹폰트는 글자 묶음(subset)별로 내려오므로, 캔버스에 그릴 실제 글자를 넘겨 미리 로드
+    const allText = [to, from, E.church, E.title.join(' ').replace(/<[^>]+>/g, ''), E.band, E.stubDate, E.legs.map(l => l.tag + l.when + l.where).join(' '), '토요일 오후 2–5시 TIME DAY 1', CONFIG.signup.title, CONFIG.signup.cardDesc, CONFIG.signup.cardDue,
+      E.flight, E.route.from.join(' '), E.route.to.join(' '),
+      'FROM TO BOARDING PASS 전도축제 초대장 주일학교 PASSENGER 초대받은 친구 INVITED BY 초대한 FLIGHT DATE TIME GATE SEAT WELCOME No. 0123456789'].join(' ');
+    await Promise.all([
+      document.fonts.load(`400 60px "Black Han Sans"`, allText), document.fonts.load(`900 30px "Noto Sans KR"`, allText),
+      document.fonts.load(`700 30px "Noto Sans KR"`, allText), document.fonts.load(`500 30px "Noto Sans KR"`, allText),
+      document.fonts.load(`700 30px "IBM Plex Mono"`, allText), document.fonts.load(`500 30px "IBM Plex Mono"`, allText),
+    ]).catch(() => {});
+    const cv = document.createElement('canvas'), ctx = cv.getContext('2d');
+    if (CONFIG.cardImage) {
+      const im = await loadImg(CONFIG.cardImage);
+      cv.width = im.naturalWidth; cv.height = im.naturalHeight; ctx.drawImage(im, 0, 0);
+    } else {
+      [cv.width, cv.height] = CONFIG.cardSize;
+      drawPlaceholder(ctx, cv.width, cv.height, hash(to + from), await loadImg(QR_SRC).catch(() => null));
+    }
+    const S = CONFIG.slots;
+    [[S.to, S.to.prefix + to], [S.from, S.from.prefix + from]].forEach(([s, t]) => {
+      const size = fitText(ctx, s, t, 370);
+      txt(ctx, t, s.x, s.y, { size, w: 900, font: s.font, color: s.fill, align: s.align });
+    });
+    cardBlob = await new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('blob')), 'image/png'));
+    if (cardURL) URL.revokeObjectURL(cardURL);
+    cardURL = URL.createObjectURL(cardBlob); toName = to;
+    $('cardImg').src = cardURL; delete $('ssImg').dataset.ok;
+    $('formScreen').hidden = true; $('resultScreen').hidden = false;
+    requestAnimationFrame(() => $('resultScreen').scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  } catch (err) {
+    console.error(err); toast('초대장 이미지를 불러오지 못했어요. 이미지 경로를 확인해 주세요.');
+  } finally { sync(); }
+}
+
+/* ── 저장 ── */
+let dl = null;
+if (window.claude && window.claude.use) window.claude.use('downloads').then(ns => { dl = ns; }).catch(() => {});
+$('saveBtn').addEventListener('click', async () => {
+  if (!cardBlob) return;
+  // 안드로이드 인앱브라우저(카톡 등)는 파일 저장을 막음 → 길게 눌러 저장 / 외부 브라우저 선택
+  if (IN_APP && IS_ANDROID && !dl) { openSheet(); return; }
+  const btn = $('saveBtn'); if (btn.getAttribute('aria-busy') === 'true') return;
+  btn.setAttribute('aria-busy', 'true'); $('saveTxt').textContent = '저장 중...';
+  const name = CONFIG.fileName(toName);
+  try {
+    if (dl) {
+      try { await dl.save({ filename: name, data: cardBlob }); toast('저장했어요.'); }
+      catch (e) { if (e && e.code !== 'declined') toast('이미지를 길게 눌러 저장해 주세요.'); }
+      return;
+    }
+    const file = new File([cardBlob], name, { type: 'image/png' });
+    // 아이폰: 공유창(사진 저장) / 안드로이드: 바로 다운로드(갤러리에 표시)
+    if (!IS_ANDROID && navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
+    else if (IN_APP) openSheet();
+    else {
+      const a = document.createElement('a'); a.href = cardURL; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      toast(IS_ANDROID ? '저장했어요. 갤러리 ‘다운로드’ 앨범에서 확인하세요.' : '저장했어요.');
+    }
+  } catch (e) { if (e && e.name !== 'AbortError') openSheet(); }
+  finally { setTimeout(() => { btn.removeAttribute('aria-busy'); $('saveTxt').textContent = '저장하기'; }, 600); }
+});
+
+/* ── 길게 눌러 저장 시트 (모든 저장 실패 시 최종 수단) ── */
+async function openSheet() {
+  const img = $('ssImg');
+  if (!img.dataset.ok) {
+    img.src = await new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(cardBlob); });
+    img.dataset.ok = '1';
+  }
+  $('ssExt').hidden = !IN_APP;
+  $('saveSheet').hidden = false;
+}
+$('ssClose').addEventListener('click', () => { $('saveSheet').hidden = true; });
+$('ssExt').addEventListener('click', () => openExternal(extUrl()));
+
+/* ── 다시하기 ── */
+$('retryBtn').addEventListener('click', () => {
+  toI.value = ''; fromI.value = ''; sync();
+  $('resultScreen').hidden = true; $('formScreen').hidden = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+/* ── 외부 브라우저 ── */
+// 입력한 이름을 주소에 담아 외부 브라우저에서도 이어지게 함
+function extUrl() {
+  const u = new URL(location.origin + location.pathname);
+  if (toName && fromI.value.trim()) { u.searchParams.set('to', toName); u.searchParams.set('from', fromI.value.trim()); }
+  u.searchParams.set('v', Date.now().toString(36));
+  return u.toString();
+}
+async function openExternal(url) {
+  if (/KAKAOTALK/i.test(UA)) { location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url); return; }
+  if (IS_ANDROID) {
+    location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
+    return;
+  }
+  try { await navigator.clipboard.writeText(url); toast('주소를 복사했어요. Safari에 붙여넣어 열어주세요.'); }
+  catch { toast('메뉴(···)에서 ‘다른 브라우저로 열기’를 선택해 주세요.'); }
+}
+$('extBtn').addEventListener('click', () => openExternal(extUrl()));
+
+let tT;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(tT); tT = setTimeout(() => t.hidden = true, 2600); }
+
+// 주소에 이름이 있으면(외부 브라우저로 넘어온 경우) 바로 초대장 생성
+(() => {
+  const q = new URLSearchParams(location.search);
+  const t = (q.get('to') || '').trim(), f = (q.get('from') || '').trim();
+  if (t && f) { toI.value = t.slice(0, 8); fromI.value = f.slice(0, 8); sync(); make(); }
+})();
+</script>
+</body>
+</html>
